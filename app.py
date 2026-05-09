@@ -1,16 +1,11 @@
 """
 ML Research Assistant — app.py
-Architecture:
-  - Gradio 6 native components for all interaction
-  - Custom CSS for dark theme styling
-  - gr.HTML() for static decorative elements only (no JS)
-  - All tool routing and logic in Python backend
+Clean Gradio 6 native UI with professional dark theme.
 """
 
 _memory_store = {}
 
 import copy
-import json
 import uuid
 import gradio as gr
 
@@ -70,6 +65,26 @@ _TOOL_LABELS = {
     "none": "No tool",
 }
 
+TOOLS_LIST = [
+    ("arxiv",                "📄 Arxiv"),
+    ("papers_with_code",     "💻 Papers w/ Code"),
+    ("llm_leaderboard",      "🏆 LLM Leaderboard"),
+    ("model_benchmarks",     "📊 Benchmarks"),
+    ("search",               "🔍 Web Search"),
+    ("paper_summarizer",     "📝 Paper Summarizer"),
+    ("huggingface_models",   "🤗 HF Models"),
+    ("huggingface_datasets", "🗄 HF Datasets"),
+    ("ai_news",              "📰 AI News"),
+    ("python_packages",      "📦 Python Packages"),
+    ("github_trending",      "🔥 GitHub Trending"),
+    ("code_generator",       "⚙️ Code Generator"),
+    ("weather",              "🌤 Weather"),
+    ("deep_search",          "🔬 Deep Search"),
+    ("memory",               "🧠 Memory"),
+    ("calc",                 "🧮 Calculator"),
+    ("github",               "🐙 GitHub"),
+]
+
 # ---------------------------------------------------------------------------
 # Backend
 # ---------------------------------------------------------------------------
@@ -96,7 +111,6 @@ def chat(user_message, history):
 
     tool_name   = routed["tool"]
     tool_result = ""
-    auto_notice = ""
 
     if   tool_name == "weather":              tool_result = run_weather(user_message)
     elif tool_name == "search":               tool_result = run_search(user_message)
@@ -116,12 +130,10 @@ def chat(user_message, history):
     elif tool_name == "paper_summarizer":     tool_result = run_paper_summarizer(user_message)
     elif tool_name == "github_trending":      tool_result = run_github_trending(user_message)
 
-    # Memory short-circuit
     if tool_name == "memory" and tool_result == "Got it! I will remember that":
-        reply = "✅ Got it! I will remember that.\n\n*Tool: 🧠 Memory*"
         history = list(history or [])
         history.append({"role": "user", "content": user_message})
-        history.append({"role": "assistant", "content": reply})
+        history.append({"role": "assistant", "content": "✅ Got it! I will remember that.\n\n*Tool: 🧠 Memory*"})
         return history, ""
 
     if tool_name == "memory" and tool_result.startswith("Here is what I know"):
@@ -130,6 +142,7 @@ def chat(user_message, history):
         history.append({"role": "assistant", "content": tool_result + "\n\n*Tool: 🧠 Memory*"})
         return history, ""
 
+    auto_notice = ""
     if routed.get("auto_enabled") and tool_name not in (None, "none"):
         auto_notice = build_auto_enable_notice(tool_name)
 
@@ -162,150 +175,297 @@ def new_chat(history, archives):
 def fetch_news():
     feed = get_ai_news_feed()
     if not feed:
-        return "No news available right now."
-    lines = []
+        return "No news available right now. Try again later."
+    lines = ["# 📰 Latest AI News\n"]
     for item in feed[:6]:
-        lines.append(f"**[{item['tag']}]** {item['title']}")
-        lines.append(f"*{item['source']} · {item['time']}*")
-        lines.append(f"{item['summary']}")
-        lines.append("---")
+        lines.append(f"### {item['title']}")
+        lines.append(f"*{item['tag']} · {item['source']} · {item['time']}*")
+        lines.append(f"{item['summary']}\n")
     return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
-# CSS — dark theme
+# CSS
 # ---------------------------------------------------------------------------
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
+/* ── Global ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
+body { background: #0f0f13 !important; }
 
-body, .gradio-container {
-    background: #13131a !important;
+.gradio-container {
+    background: #0f0f13 !important;
     font-family: 'Inter', sans-serif !important;
-    color: #e2e8f0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 footer { display: none !important; }
 
-/* Hide default gradio padding */
-.gradio-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
-.main { padding: 0 !important; }
+/* ── Layout ──────────────────────────────────────────────────── */
 .contain { padding: 0 !important; }
-.gap { gap: 0 !important; }
+.gap     { gap: 4px !important; }
 
-/* Sidebar */
-#sidebar-col {
-    background: #1a1a24 !important;
-    border-right: 0.5px solid #32323f !important;
+/* ── Sidebar ──────────────────────────────────────────────────── */
+#sidebar {
+    background: #16161f !important;
+    border-right: 1px solid #2a2a3a !important;
     padding: 0 !important;
     min-height: 100vh !important;
 }
 
-/* Logo area */
-#logo-html { padding: 0 !important; }
+/* App title */
+#app-title {
+    background: #16161f !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+#app-title p {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #f1f5f9 !important;
+    padding: 14px 14px 10px !important;
+    border-bottom: 1px solid #2a2a3a !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
 
 /* New chat button */
 #new-chat-btn {
-    background: #13131a !important;
-    border: 0.5px solid #32323f !important;
+    margin: 8px 8px 4px !important;
+    background: #0f0f13 !important;
+    border: 1px solid #2a2a3a !important;
     color: #94a3b8 !important;
     border-radius: 8px !important;
-    margin: 8px !important;
     font-size: 12px !important;
     font-family: 'Inter', sans-serif !important;
+    transition: all 0.15s !important;
+    width: calc(100% - 16px) !important;
 }
 #new-chat-btn:hover {
-    background: #1e1e28 !important;
+    background: #1e1e2e !important;
     color: #e2e8f0 !important;
-    border-color: #44445a !important;
+    border-color: #3a3a4a !important;
 }
 
-/* Tabs */
-#sidebar-tabs > .tab-nav {
-    background: transparent !important;
-    border-bottom: 0.5px solid #32323f !important;
-    padding: 0 6px !important;
+/* Sidebar tabs */
+#sidebar-tabs {
+    background: #16161f !important;
+    border: none !important;
 }
-#sidebar-tabs > .tab-nav button {
-    font-size: 11px !important;
-    color: #64748b !important;
+#sidebar-tabs .tab-nav {
+    background: #16161f !important;
+    border-bottom: 1px solid #2a2a3a !important;
+    padding: 0 6px !important;
+    gap: 0 !important;
+}
+#sidebar-tabs .tab-nav button {
     background: transparent !important;
     border: none !important;
     border-bottom: 2px solid transparent !important;
     border-radius: 0 !important;
-    padding: 7px 8px !important;
-    font-family: 'Inter', sans-serif !important;
+    color: #64748b !important;
+    font-size: 11px !important;
     font-weight: 500 !important;
+    padding: 8px 10px !important;
+    font-family: 'Inter', sans-serif !important;
+    transition: all 0.15s !important;
 }
-#sidebar-tabs > .tab-nav button.selected {
+#sidebar-tabs .tab-nav button.selected {
     color: #D97706 !important;
     border-bottom-color: #D97706 !important;
     background: transparent !important;
 }
+#sidebar-tabs .tabitem {
+    background: #16161f !important;
+    border: none !important;
+    padding: 6px 0 !important;
+}
 
 /* History buttons */
-.hist-btn {
+.hist-btn button {
     background: transparent !important;
     border: none !important;
     color: #64748b !important;
     text-align: left !important;
     font-size: 11px !important;
-    padding: 6px 10px !important;
+    padding: 6px 12px !important;
     border-radius: 6px !important;
     margin: 1px 6px !important;
     width: calc(100% - 12px) !important;
     font-family: 'Inter', sans-serif !important;
+    justify-content: flex-start !important;
+    transition: all 0.12s !important;
 }
-.hist-btn:hover {
-    background: #1e1e28 !important;
+.hist-btn button:hover {
+    background: #1e1e2e !important;
     color: #e2e8f0 !important;
+}
+
+/* Tool checkboxes */
+#tools-container {
+    padding: 4px 8px !important;
+    background: #16161f !important;
+}
+#tools-container .wrap {
+    gap: 2px !important;
+}
+#tools-container label {
+    color: #94a3b8 !important;
+    font-size: 11px !important;
+    font-family: 'Inter', sans-serif !important;
+    padding: 5px 8px !important;
+    border-radius: 6px !important;
+    transition: background 0.12s !important;
+}
+#tools-container label:hover {
+    background: #1e1e2e !important;
+}
+#tools-container input[type=checkbox] {
+    accent-color: #a78bfa !important;
+}
+
+/* News */
+#news-container {
+    background: #16161f !important;
+    padding: 0 6px !important;
+}
+#news-box {
+    background: transparent !important;
+    border: none !important;
+}
+#news-box textarea {
+    background: #0f0f13 !important;
+    border: 1px solid #2a2a3a !important;
+    color: #94a3b8 !important;
+    font-size: 11px !important;
+    font-family: 'Inter', sans-serif !important;
+    border-radius: 8px !important;
+    line-height: 1.6 !important;
+}
+#news-refresh {
+    background: #0f0f13 !important;
+    border: 1px solid #2a2a3a !important;
+    color: #94a3b8 !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-family: 'Inter', sans-serif !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+}
+#news-refresh:hover {
+    border-color: #D97706 !important;
+    color: #D97706 !important;
+}
+
+/* ── Main chat area ───────────────────────────────────────────── */
+#main-col {
+    background: #0f0f13 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Chat header */
+#chat-header {
+    background: #0f0f13 !important;
+    border: none !important;
+    border-bottom: 1px solid #2a2a3a !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+#chat-header p {
+    padding: 12px 18px !important;
+    margin: 0 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #f1f5f9 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
 }
 
 /* Chatbot */
 #chatbot {
-    background: #13131a !important;
+    background: #0f0f13 !important;
     border: none !important;
     flex: 1 !important;
 }
-#chatbot .bubble-wrap { background: #13131a !important; }
+#chatbot .bubble-wrap {
+    background: #0f0f13 !important;
+    padding: 16px !important;
+}
 
 /* User bubble */
-#chatbot .message.user {
-    background: #1e2040 !important;
+#chatbot .message.user > div {
+    background: #1e1e40 !important;
     color: #e2e8f0 !important;
     border-radius: 14px 14px 3px 14px !important;
     border: none !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 13px !important;
+    line-height: 1.6 !important;
+    padding: 10px 14px !important;
 }
 
 /* Bot bubble */
-#chatbot .message.bot {
-    background: #1a1a24 !important;
+#chatbot .message.bot > div {
+    background: #16161f !important;
     color: #e2e8f0 !important;
     border-radius: 3px 14px 14px 14px !important;
-    border: 0.5px solid #32323f !important;
+    border: 1px solid #2a2a3a !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 13px !important;
+    line-height: 1.6 !important;
+    padding: 10px 14px !important;
 }
 
-/* Input textbox */
+/* Bot avatar */
+#chatbot .message.bot .avatar-container img,
+#chatbot .message.bot .avatar-container {
+    background: #1e1e40 !important;
+    border-radius: 50% !important;
+}
+
+/* ── Input area ───────────────────────────────────────────────── */
+#input-row {
+    background: #0f0f13 !important;
+    border-top: 1px solid #2a2a3a !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+    align-items: flex-end !important;
+}
+
+#msg-input {
+    background: transparent !important;
+    border: none !important;
+    flex: 1 !important;
+}
 #msg-input textarea {
-    background: #1a1a24 !important;
-    border: 0.5px solid #32323f !important;
+    background: #16161f !important;
+    border: 1px solid #2a2a3a !important;
     border-radius: 10px !important;
     color: #e2e8f0 !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 13px !important;
+    padding: 10px 14px !important;
+    resize: none !important;
+    line-height: 1.5 !important;
+    transition: border-color 0.2s !important;
 }
 #msg-input textarea:focus {
     border-color: #D97706 !important;
-    box-shadow: 0 0 0 2px #D9770620 !important;
+    box-shadow: 0 0 0 2px rgba(217,119,6,0.15) !important;
+    outline: none !important;
 }
-#msg-input textarea::placeholder { color: #44445a !important; }
-#msg-input { background: transparent !important; border: none !important; }
+#msg-input textarea::placeholder { color: #3a3a4a !important; }
+#msg-input label { display: none !important; }
 
 /* Send button — GOLD */
 #send-btn {
@@ -313,192 +473,100 @@ footer { display: none !important; }
     border: none !important;
     border-radius: 8px !important;
     color: white !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
-    height: 40px !important;
-    font-size: 16px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    font-size: 18px !important;
     padding: 0 !important;
+    transition: all 0.15s !important;
+    flex-shrink: 0 !important;
 }
 #send-btn:hover {
     background: #B45309 !important;
-    transform: scale(1.04) !important;
+    transform: scale(1.05) !important;
 }
 
-/* News textbox */
-#news-box textarea {
-    background: #1a1a24 !important;
-    border: 0.5px solid #32323f !important;
-    color: #94a3b8 !important;
-    font-size: 11px !important;
-    font-family: 'Inter', sans-serif !important;
-    border-radius: 8px !important;
-}
-#news-box { background: transparent !important; border: none !important; }
-
-/* News refresh button */
-#news-refresh-btn {
-    background: #1a1a24 !important;
-    border: 0.5px solid #32323f !important;
-    color: #94a3b8 !important;
-    border-radius: 6px !important;
-    font-size: 11px !important;
-}
-#news-refresh-btn:hover {
-    border-color: #D97706 !important;
-    color: #D97706 !important;
-}
-
-/* Tool checkboxes */
-.tool-check label {
-    color: #94a3b8 !important;
-    font-size: 11px !important;
-    font-family: 'Inter', sans-serif !important;
-}
-.tool-check input[type=checkbox]:checked { accent-color: #a78bfa !important; }
-
-/* Main column */
-#main-col { background: #13131a !important; padding: 0 !important; }
-
-/* Header */
-#header-html { border-bottom: 0.5px solid #32323f !important; }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 3px; }
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #32323f; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #D97706; }
 """
 
 # ---------------------------------------------------------------------------
-# Gradio UI — native components
+# Gradio App
 # ---------------------------------------------------------------------------
 
-LOGO_HTML = """
-<div style="padding:14px 12px 10px;border-bottom:0.5px solid #32323f;display:flex;align-items:center;gap:9px;">
-  <div style="width:28px;height:28px;border-radius:7px;background:#92600A;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-    <span style="font-size:16px;">🧠</span>
-  </div>
-  <div>
-    <div style="font-size:12px;font-weight:600;color:#f1f5f9;line-height:1.2;">ML Research</div>
-    <div style="font-size:9px;color:#92600A;font-weight:500;letter-spacing:.04em;">Assistant</div>
-  </div>
-</div>
-"""
-
-HEADER_HTML = """
-<div style="padding:12px 18px;display:flex;align-items:center;justify-content:space-between;">
-  <span style="font-size:13px;font-weight:500;color:#f1f5f9;">ML Research Assistant</span>
-  <span style="font-size:10px;color:#475569;background:#1a1a24;padding:2px 9px;border-radius:20px;border:0.5px solid #32323f;">Qwen2.5-7B</span>
-</div>
-"""
-
-TOOLS_LIST = [
-    ("arxiv",               "📄 Arxiv"),
-    ("papers_with_code",    "💻 Papers w/ Code"),
-    ("llm_leaderboard",     "🏆 LLM Leaderboard"),
-    ("model_benchmarks",    "📊 Benchmarks"),
-    ("search",              "🔍 Web Search"),
-    ("paper_summarizer",    "📝 Paper Summarizer"),
-    ("huggingface_models",  "🤗 HF Models"),
-    ("huggingface_datasets","🗄 HF Datasets"),
-    ("ai_news",             "📰 AI News"),
-    ("python_packages",     "📦 Python Packages"),
-    ("github_trending",     "🔥 GitHub Trending"),
-    ("code_generator",      "⚙️ Code Generator"),
-    ("weather",             "🌤 Weather"),
-    ("deep_search",         "🔬 Deep Search"),
-    ("memory",              "🧠 Memory"),
-    ("calc",                "🧮 Calculator"),
-    ("github",              "🐙 GitHub"),
-]
-
-with gr.Blocks(css=CSS, title="ML Research Assistant", fill_height=True) as demo:
+with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
 
     archive_state = gr.State([])
 
     with gr.Row(equal_height=True):
 
-        # ── SIDEBAR ──────────────────────────────────────────────────────
-        with gr.Column(scale=1, min_width=220, elem_id="sidebar-col"):
+        # ── SIDEBAR ──────────────────────────────────────────────
+        with gr.Column(scale=1, min_width=230, elem_id="sidebar"):
 
-            gr.HTML(LOGO_HTML, elem_id="logo-html")
+            gr.Markdown("🧠 **ML Research** · *Assistant*", elem_id="app-title")
 
             new_chat_btn = gr.Button("➕  New chat", elem_id="new-chat-btn", size="sm")
 
             with gr.Tabs(elem_id="sidebar-tabs"):
 
-                # History tab
                 with gr.Tab("💬 History"):
                     @gr.render(inputs=[archive_state])
                     def render_history(archives):
                         for conv in (archives or []):
                             b = gr.Button(
-                                (conv.get("title") or "Untitled")[:36],
+                                "💬 " + (conv.get("title") or "Untitled")[:32],
                                 elem_classes=["hist-btn"],
                                 size="sm",
                             )
                             b.click(
                                 lambda c=conv: c.get("messages") or [],
-                                None, chatbot
+                                None, chatbot,
                             )
 
-                # Tools tab
                 with gr.Tab("⚡ Tools"):
-                    tool_checkboxes = {}
-                    for tool_id, tool_label in TOOLS_LIST:
-                        cb = gr.Checkbox(
-                            label=tool_label,
-                            value=_tool_state.get(tool_id, True),
-                            elem_classes=["tool-check"],
-                        )
-                        tool_checkboxes[tool_id] = cb
+                    with gr.Column(elem_id="tools-container"):
+                        for tool_id, tool_label in TOOLS_LIST:
+                            cb = gr.Checkbox(
+                                label=tool_label,
+                                value=_tool_state.get(tool_id, True),
+                            )
+                            def make_toggle(tid):
+                                def toggle(val):
+                                    _tool_state[tid] = val
+                                return toggle
+                            cb.change(make_toggle(tool_id), inputs=[cb], outputs=[])
 
-                        def make_toggle(tid):
-                            def toggle(val):
-                                _tool_state[tid] = val
-                            return toggle
-
-                        cb.change(make_toggle(tool_id), inputs=[cb], outputs=[])
-
-                # AI News tab
                 with gr.Tab("📰 AI News"):
-                    news_box = gr.Textbox(
-                        label="",
-                        value="Click refresh to load news",
-                        lines=20,
-                        interactive=False,
-                        elem_id="news-box",
-                        show_label=False,
-                    )
-                    news_refresh_btn = gr.Button(
-                        "🔄 Refresh News",
-                        elem_id="news-refresh-btn",
-                        size="sm",
-                    )
-                    news_refresh_btn.click(fetch_news, inputs=[], outputs=[news_box])
+                    with gr.Column(elem_id="news-container"):
+                        news_refresh = gr.Button("🔄 Refresh News", elem_id="news-refresh", size="sm")
+                        news_box = gr.Markdown(
+                            value="*Click refresh to load the latest AI news.*",
+                            elem_id="news-box",
+                        )
+                        news_refresh.click(fetch_news, inputs=[], outputs=[news_box])
 
-        # ── MAIN CHAT ─────────────────────────────────────────────────────
+        # ── MAIN CHAT ─────────────────────────────────────────────
         with gr.Column(scale=5, elem_id="main-col"):
 
-            gr.HTML(HEADER_HTML, elem_id="header-html")
+            gr.Markdown(
+                "**ML Research Assistant** &nbsp;&nbsp; `Qwen2.5-7B`",
+                elem_id="chat-header",
+            )
 
             chatbot = gr.Chatbot(
                 elem_id="chatbot",
                 label="",
                 show_label=False,
-                height="78vh",
-                bubble_full_width=False,
+                height="80vh",
                 type="messages",
-                placeholder="""
-                <div style='text-align:center;padding:60px 20px;'>
-                  <div style='font-size:40px;margin-bottom:12px;'>🧠</div>
-                  <div style='font-size:18px;font-weight:600;color:#f1f5f9;margin-bottom:8px;'>ML Research Assistant</div>
-                  <div style='font-size:13px;color:#475569;line-height:1.6;'>Ask about papers, models, benchmarks, code,<br>or fetch the latest AI news.</div>
-                </div>
-                """,
+                show_share_button=False,
+                avatar_images=(None, "https://api.dicebear.com/7.x/bottts/svg?seed=mlresearch"),
             )
 
-            with gr.Row():
+            with gr.Row(elem_id="input-row"):
                 msg = gr.Textbox(
                     placeholder="Ask about papers, models, benchmarks...",
                     show_label=False,
@@ -506,13 +574,14 @@ with gr.Blocks(css=CSS, title="ML Research Assistant", fill_height=True) as demo
                     container=False,
                     elem_id="msg-input",
                     lines=1,
+                    max_lines=4,
                 )
-                send = gr.Button("↑", elem_id="send-btn", scale=1)
+                send = gr.Button("↑", elem_id="send-btn", scale=1, min_width=42)
 
-    # ── Events ───────────────────────────────────────────────────────────
+    # ── Events ────────────────────────────────────────────────────
     msg.submit(chat, [msg, chatbot], [chatbot, msg])
     send.click(chat, [msg, chatbot], [chatbot, msg])
     new_chat_btn.click(new_chat, [chatbot, archive_state], [chatbot, archive_state])
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch(share=True, css=CSS)
