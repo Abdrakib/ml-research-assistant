@@ -1,10 +1,21 @@
-streamlit>=1.33.0
+# UI
 gradio>=4.0.0
+streamlit>=1.33.0
+
+# ML / inference
 torch
 transformers
 accelerate
+spaces
+
+# Search & HTTP
 ddgs
+arxiv
 requests
-PyGithub
+
+# Router fuzzy matching
 thefuzz
 python-Levenshtein
+
+# GitHub tool (tools/github.py)
+PyGithub
