@@ -801,12 +801,17 @@ function init() {
   setInterval(fetchNews, 30*60*1000);
 }
 
-// Run init when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
+// Gradio 6 renders HTML via Svelte asynchronously
+// DOM elements may not exist when this script first runs
+// Poll until #send-btn exists, then init
+function waitAndInit() {
+  if (document.getElementById('send-btn')) {
+    init();
+  } else {
+    setTimeout(waitAndInit, 100);
+  }
 }
+waitAndInit();
 
 })(); // end IIFE
 </script>
