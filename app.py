@@ -3,7 +3,7 @@ ML Research Assistant — app.py
 Architecture:
   Backend : Gradio gr.Blocks (ZeroGPU compatible)
   Frontend: Custom HTML/CSS/JS injected via gr.HTML()
-  Bridge  : Hidden Gradio components + JS fetch to /run/predict
+  Bridge  : Hidden Gradio components + JS fetch to /gradio_api/run/<api_name>
 """
 
 _memory_store = {}
@@ -616,11 +616,10 @@ function sendMessage() {
   var histJson  = JSON.stringify(_history);
   var stateJson = JSON.stringify(_toolState);
 
-  fetch('/run/predict', {
+  fetch('/gradio_api/run/chat', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
-      api_name: '/chat',
       data: [msg, histJson, stateJson],
       session_hash: getSessionHash(),
     })
@@ -705,11 +704,10 @@ function loadChat(chatId) {
 function fetchNews() {
   var btn = document.getElementById('refresh-btn');
   btn.classList.add('spinning');
-  fetch('/run/predict', {
+  fetch('/gradio_api/run/fetch_news', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
-      api_name: '/fetch_news',
       data: [],
       session_hash: getSessionHash(),
     })
@@ -833,9 +831,9 @@ with gr.Blocks(css=_GRADIO_CSS, title="ML Research Assistant", fill_height=True)
     gr.HTML(CUSTOM_UI)
 
     # ── Hidden backend components ──
-    # These are invisible — JS calls them via /run/predict with fn_index
+    # Invisible; JS calls api_name="chat" / "fetch_news" via /gradio_api/run/...
 
-    # fn_index 0: main chat
+    # Main chat
     _hist_in   = gr.Textbox(value="[]",  visible=False, elem_id="history-input")
     _state_in  = gr.Textbox(value="{}",  visible=False, elem_id="tool-state-input")
     _user_in   = gr.Textbox(value="",    visible=False, elem_id="user-input")
@@ -851,7 +849,7 @@ with gr.Blocks(css=_GRADIO_CSS, title="ML Research Assistant", fill_height=True)
         api_name="chat",
     )
 
-    # fn_index 1: news feed fetch
+    # News feed fetch
     _news_out = gr.Textbox(visible=False)
     _news_btn = gr.Button(visible=False)
     _news_btn.click(fetch_news_fn, inputs=[], outputs=[_news_out], api_name="fetch_news")
