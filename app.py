@@ -477,6 +477,8 @@ CUSTOM_UI = """
         <button id="send-btn"><i class="ti ti-arrow-up"></i></button>
       </div>
       <div id="input-hint">Tools auto-activate · Click news cards to ask about them</div>
+      <div id="debug-panel" style="margin-top:6px;padding:6px 10px;border-radius:6px;background:#1a0000;border:0.5px solid #ef4444;font-size:10px;color:#ef4444;display:none;word-break:break-all;"></div>
+      <div id="debug-ok" style="margin-top:6px;padding:6px 10px;border-radius:6px;background:#001a00;border:0.5px solid #22c55e;font-size:10px;color:#22c55e;display:none;"></div>
     </div>
   </div>
 </div>
@@ -599,11 +601,21 @@ function appendError(msg) {
   msgs.insertBefore(div, typing);
 }
 
+function dbg(msg, isErr) {
+  var el = document.getElementById(isErr ? 'debug-panel' : 'debug-ok');
+  if (el) { el.style.display='block'; el.textContent = msg; }
+  console.log('[ML-APP]', msg);
+}
+
 function sendMessage() {
-  if (_busy) return;
+  dbg('sendMessage() called', false);
+  if (_busy) { dbg('busy - ignored', false); return; }
   var input = document.getElementById('msg-input');
-  var msg   = (input.value||'').trim();
-  if (!msg) return;
+  if (!input) { dbg('ERROR: msg-input not found', true); return; }
+  var msg = (input.value||'').trim();
+  if (!msg) { dbg('empty message - ignored', false); return; }
+
+  dbg('sending: ' + msg.slice(0,30), false);
 
   var welcome = document.getElementById('welcome');
   if (welcome) welcome.style.display = 'none';
@@ -615,19 +627,23 @@ function sendMessage() {
 
   var histJson  = JSON.stringify(_history);
   var stateJson = JSON.stringify(_toolState);
+  var payload   = {data: [msg, histJson, stateJson], session_hash: getSessionHash()};
+
+  dbg('fetching /gradio_api/run/chat ...', false);
 
   fetch('/gradio_api/run/chat', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      data: [msg, histJson, stateJson],
-      session_hash: getSessionHash(),
-    })
+    body: JSON.stringify(payload)
   })
-  .then(function(r){return r.json();})
+  .then(function(r){
+    dbg('response status: ' + r.status, r.status !== 200);
+    return r.json();
+  })
   .then(function(res){
     setBusy(false);
-    if (res.error) { appendError(res.error); return; }
+    if (res.error) { dbg('API error: ' + res.error, true); appendError(res.error); return; }
+    dbg('success! reply: ' + (res.data&&res.data[1]||'').slice(0,40), false);
     var data      = res.data;
     var histJson  = data[0];
     var botReply  = data[1];
@@ -640,6 +656,7 @@ function sendMessage() {
   })
   .catch(function(err){
     setBusy(false);
+    dbg('fetch ERROR: ' + String(err), true);
     appendError('Connection error — please try again.');
     console.error(err);
   });
@@ -762,6 +779,9 @@ function pasteNews(headline) {
 
 // ── Init — attach all event listeners here ────────────────────
 function init() {
+  console.log('[ML-APP] init() running');
+  var dbgEl = document.getElementById('debug-ok');
+  if (dbgEl) { dbgEl.style.display='block'; dbgEl.textContent='✅ JS init() ran — send-btn: ' + (document.getElementById('send-btn') ? 'FOUND' : 'NOT FOUND'); }
   // Populate tool state
   TOOLS.forEach(function(t){ _toolState[t.id]=t.on; });
 
@@ -830,7 +850,7 @@ footer { display: none !important; }
 .block { padding: 0 !important; border: none !important; background: transparent !important; }
 """
 
-with gr.Blocks(css=_GRADIO_CSS, title="ML Research Assistant", fill_height=True) as demo:
+with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
 
     # ── Custom UI ──
     gr.HTML(CUSTOM_UI)
@@ -860,4 +880,4 @@ with gr.Blocks(css=_GRADIO_CSS, title="ML Research Assistant", fill_height=True)
     _news_btn.click(fetch_news_fn, inputs=[], outputs=[_news_out], api_name="fetch_news")
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch(css=_GRADIO_CSS, share=True)
