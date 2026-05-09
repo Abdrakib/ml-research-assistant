@@ -497,7 +497,7 @@ footer { display: none !important; }
 # Gradio App
 # ---------------------------------------------------------------------------
 
-with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
+with gr.Blocks(title="ML Research Assistant", fill_height=True, css=CSS) as demo:
 
     archive_state = gr.State([])
 
@@ -562,7 +562,8 @@ with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
                 show_label=False,
                 height="80vh",
                 type="messages",
-                show_share_button=False,
+                show_copy_button=True,
+                allow_tags=False,
                 avatar_images=(None, "https://api.dicebear.com/7.x/bottts/svg?seed=mlresearch"),
             )
 
@@ -584,4 +585,4 @@ with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
     new_chat_btn.click(new_chat, [chatbot, archive_state], [chatbot, archive_state])
 
 if __name__ == "__main__":
-    demo.launch(share=True, css=CSS)
+    demo.launch(share=True)
