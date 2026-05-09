@@ -1025,4 +1025,4 @@ with gr.Blocks(css=_GRADIO_CSS, title="ML Research Assistant", fill_height=True)
     _news_btn.click(fetch_news_fn, inputs=[], outputs=[_news_out])
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(share=True)
