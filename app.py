@@ -181,52 +181,51 @@ def fetch_news():
     return "\n".join(lines)
 
 
-# ── Theme — warm parchment / off-white ───────────────────────────────────────
-
-theme = gr.themes.Base(
-    primary_hue=gr.themes.colors.orange,
-    secondary_hue=gr.themes.colors.stone,
-    neutral_hue=gr.themes.colors.stone,
-    font=gr.themes.GoogleFont("Inter"),
-).set(
-    # Page backgrounds — parchment / cream
-    background_fill_primary="#f5f0e8",
-    background_fill_secondary="#ede8df",
-    background_fill_primary_dark="#f5f0e8",
-    background_fill_secondary_dark="#ede8df",
-
-    # Borders — hair-thin, warm
-    border_color_primary="#ddd5c8",
-    border_color_primary_dark="#ddd5c8",
-
-    # Text — muted brown-gray, not black
-    body_text_color="#3d3530",
-    body_text_color_dark="#3d3530",
-    body_text_color_subdued="#8c7f74",
-    body_text_color_subdued_dark="#8c7f74",
-
-    # Buttons
-    button_primary_background_fill="#b45309",
-    button_primary_background_fill_hover="#92400e",
-    button_primary_text_color="#ffffff",
-    button_secondary_background_fill="#ede8df",
-    button_secondary_background_fill_hover="#e5dfd5",
-    button_secondary_text_color="#5c4f44",
-    button_secondary_border_color="#ddd5c8",
-
-    # Inputs — slightly warmer than page
-    input_background_fill="#faf7f2",
-    input_background_fill_dark="#faf7f2",
-    input_border_color="#ddd5c8",
-    input_border_color_focus="#b45309",
-    input_placeholder_color="#b5a99e",
-
-
-)
 
 # ── CSS — paper-like, flat, editorial ────────────────────────────────────────
 
 CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+/* Force Inter font everywhere */
+body, .gradio-container, button, input, textarea, select {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* ── Base colors replacing gr.themes ───────────────────────── */
+body { background: #f5f0e8 !important; }
+.gradio-container { background: #f5f0e8 !important; max-width: 100% !important; padding: 0 !important; }
+.gradio-container * { color: #3d3530; }
+
+/* Inputs */
+input, textarea {
+    background: #faf7f2 !important;
+    border: 1px solid #ddd5c8 !important;
+    color: #3d3530 !important;
+}
+input:focus, textarea:focus {
+    border-color: #b45309 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(180,83,9,0.08) !important;
+}
+
+/* Primary buttons */
+.gr-button-primary, button.primary {
+    background: #b45309 !important;
+    border-color: #b45309 !important;
+    color: white !important;
+}
+
+/* Secondary buttons */
+.gr-button-secondary, button.secondary {
+    background: #ede8df !important;
+    border-color: #ddd5c8 !important;
+    color: #5c4f44 !important;
+}
+
+/* Panels */
+.gr-panel { background: #f5f0e8 !important; border-color: #ddd5c8 !important; }
+
 /* ── Base ───────────────────────────────────────────────────── */
 footer { display: none !important; }
 .gradio-container {
@@ -598,7 +597,7 @@ body { background: #f5f0e8 !important; }
 
 # ── Gradio layout ─────────────────────────────────────────────────────────────
 
-with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
+with gr.Blocks(title="ML Research Assistant", fill_height=True, css=CSS) as demo:
 
     archive_state = gr.State([])
 
@@ -744,4 +743,4 @@ with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch(share=True, theme=theme, css=CSS)
+    demo.launch(share=True)
