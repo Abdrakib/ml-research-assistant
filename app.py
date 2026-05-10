@@ -507,6 +507,8 @@ body { background: #f5f0e8 !important; }
     max-width: 800px !important;
     margin: 0 auto !important;
     padding: 12px 0 32px !important;
+    position: relative !important;
+    z-index: 10 !important;
 }
 
 #composer-row {
@@ -519,6 +521,8 @@ body { background: #f5f0e8 !important; }
     transition: border-color 0.2s, box-shadow 0.2s !important;
     box-shadow: none !important;
     position: relative !important;
+    pointer-events: auto !important;
+    cursor: text !important;
 }
 #composer-row:focus-within {
     border-color: #b45309 !important;
@@ -548,6 +552,10 @@ body { background: #f5f0e8 !important; }
     outline: none !important;
     min-height: 28px !important;
     font-family: 'Inter', sans-serif !important;
+    cursor: text !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 20 !important;
 }
 #msg-input textarea::placeholder { color: #b5a99e !important; }
 #msg-input textarea:focus { outline: none !important; box-shadow: none !important; }
@@ -558,12 +566,14 @@ body { background: #f5f0e8 !important; }
     background: transparent !important;
     padding: 0 !important;
     cursor: text !important;
+    pointer-events: auto !important;
+    z-index: 15 !important;
+    position: relative !important;
 }
-#msg-input textarea {
-    cursor: text !important;
+#msg-input {
     pointer-events: auto !important;
     position: relative !important;
-    z-index: 2 !important;
+    z-index: 15 !important;
 }
 
 /* Send button — terracotta, inside the composer bar */
