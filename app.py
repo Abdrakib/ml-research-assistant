@@ -278,10 +278,34 @@ body { background: #f5f0e8 !important; }
     border-bottom: 1px solid #ddd5c8 !important;
 }
 
+/* Sidebar top row */
+#sidebar-top-row {
+    padding: 8px 10px 4px !important;
+    gap: 6px !important;
+    margin: 0 !important;
+}
+
+/* Toggle button */
+#toggle-btn {
+    min-width: 32px !important;
+    max-width: 32px !important;
+    padding: 6px 0 !important;
+    background: #f5f0e8 !important;
+    border: 1px solid #ddd5c8 !important;
+    color: #b5a99e !important;
+    border-radius: 7px !important;
+    font-size: 11px !important;
+    box-shadow: none !important;
+}
+#toggle-btn:hover {
+    background: #ece6dc !important;
+    color: #7a6e65 !important;
+}
+
 /* New chat button */
 #new-chat-btn {
-    margin: 10px 10px 4px !important;
-    width: calc(100% - 20px) !important;
+    margin: 0 !important;
+    width: 100% !important;
     border-radius: 7px !important;
     font-size: 12px !important;
     padding: 6px 12px !important;
@@ -495,10 +519,16 @@ body { background: #f5f0e8 !important; }
     padding: 6px 6px 6px 16px !important;
     transition: border-color 0.2s, box-shadow 0.2s !important;
     box-shadow: none !important;
+    position: relative !important;
 }
 #composer-row:focus-within {
     border-color: #b45309 !important;
     box-shadow: 0 0 0 3px rgba(180,83,9,0.08) !important;
+}
+/* Ensure textbox inside is fully clickable */
+#composer-row > div {
+    position: relative !important;
+    z-index: 1 !important;
 }
 
 /* Textbox inside composer */
@@ -528,6 +558,13 @@ body { background: #f5f0e8 !important; }
     box-shadow: none !important;
     background: transparent !important;
     padding: 0 !important;
+    cursor: text !important;
+}
+#msg-input textarea {
+    cursor: text !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
 /* Send button — terracotta, inside the composer bar */
@@ -561,23 +598,40 @@ body { background: #f5f0e8 !important; }
 
 # ── Gradio layout ─────────────────────────────────────────────────────────────
 
-with gr.Blocks(theme=theme, css=CSS, title="ML Research Assistant", fill_height=True) as demo:
+with gr.Blocks(title="ML Research Assistant", fill_height=True) as demo:
 
     archive_state = gr.State([])
 
     with gr.Row(elem_id="page-row", equal_height=False):
 
         # ── SIDEBAR ──────────────────────────────────────────────
-        with gr.Column(scale=0, min_width=240, elem_id="sidebar-col"):
+        with gr.Column(scale=0, min_width=240, elem_id="sidebar-col") as sidebar_col:
 
-            gr.Markdown("🧠 **ML Research Assistant**", elem_id="app-name")
+            gr.HTML('''
+            <div style="padding:16px 16px 10px;border-bottom:1px solid #e8e2d8;display:flex;align-items:center;gap:10px;">
+              <div style="width:30px;height:30px;border-radius:8px;background:#92600A;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="font-size:17px;line-height:1;">🧠</span>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#3d3530;line-height:1.2;">ML Research Assistant</div>
+              </div>
+            </div>
+            ''', elem_id="app-name")
             gr.Markdown("Qwen2.5-7B · 17 tools", elem_id="model-badge")
 
-            new_chat_btn = gr.Button(
-                "＋  New chat",
-                elem_id="new-chat-btn",
-                size="sm",
-            )
+            with gr.Row(elem_id="sidebar-top-row"):
+                new_chat_btn = gr.Button(
+                    "＋  New chat",
+                    elem_id="new-chat-btn",
+                    size="sm",
+                    scale=4,
+                )
+                toggle_btn = gr.Button(
+                    "◀",
+                    elem_id="toggle-btn",
+                    size="sm",
+                    scale=1,
+                )
 
             with gr.Tabs(elem_id="sidebar-tabs"):
 
@@ -640,7 +694,8 @@ with gr.Blocks(theme=theme, css=CSS, title="ML Research Assistant", fill_height=
                     show_label=False,
                     height=None,
                     type="messages",
-                    show_copy_button=True,
+                    show_copy_button=False,
+                    allow_tags=False,
                     avatar_images=(
                         None,
                         "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=ml&backgroundColor=ede8df",
@@ -670,5 +725,23 @@ with gr.Blocks(theme=theme, css=CSS, title="ML Research Assistant", fill_height=
     send.click(chat, [msg, chatbot], [chatbot, msg])
     new_chat_btn.click(new_chat, [chatbot, archive_state], [chatbot, archive_state])
 
+    # Toggle sidebar visibility
+    sidebar_visible = gr.State(True)
+
+    def toggle_sidebar(visible):
+        new_visible = not visible
+        label = "▶" if not new_visible else "◀"
+        return (
+            gr.update(visible=new_visible),
+            gr.update(value=label),
+            new_visible,
+        )
+
+    toggle_btn.click(
+        toggle_sidebar,
+        inputs=[sidebar_visible],
+        outputs=[sidebar_col, toggle_btn, sidebar_visible],
+    )
+
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch(share=True, theme=theme, css=CSS)
