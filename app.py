@@ -502,27 +502,21 @@ body { background: #f5f0e8 !important; }
 #chatbot .message:hover .message-buttons { opacity: 1 !important; }
 
 /* ── Composer — integrated rounded bar ───────────────────────── */
-#composer-wrap {
+#composer-row {
     width: 100% !important;
     max-width: 800px !important;
     margin: 0 auto !important;
-    padding: 12px 0 32px !important;
-    position: relative !important;
-    z-index: 10 !important;
-}
-
-#composer-row {
+    padding: 6px 6px 6px 16px !important;
+    margin-bottom: 20px !important;
     align-items: flex-end !important;
     gap: 0 !important;
     background: #faf7f2 !important;
     border: 1px solid #ddd5c8 !important;
     border-radius: 14px !important;
-    padding: 6px 6px 6px 16px !important;
     transition: border-color 0.2s, box-shadow 0.2s !important;
     box-shadow: none !important;
     position: relative !important;
     pointer-events: auto !important;
-    cursor: text !important;
 }
 #composer-row:focus-within {
     border-color: #b45309 !important;
@@ -711,23 +705,22 @@ with gr.Blocks(title="ML Research Assistant", fill_height=True, css=CSS) as demo
                     ),
                 )
 
-                with gr.Column(elem_id="composer-wrap"):
-                    with gr.Row(elem_id="composer-row"):
-                        msg = gr.Textbox(
-                            placeholder="Ask about papers, models, benchmarks, or news…",
-                            show_label=False,
-                            scale=1,
-                            container=False,
-                            elem_id="msg-input",
-                            lines=1,
-                            max_lines=6,
-                        )
-                        send = gr.Button(
-                            "↑",
-                            elem_id="send-btn",
-                            scale=0,
-                            min_width=34,
-                        )
+                with gr.Row(elem_id="composer-row"):
+                    msg = gr.Textbox(
+                        placeholder="Ask about papers, models, benchmarks, or news…",
+                        show_label=False,
+                        scale=1,
+                        container=False,
+                        elem_id="msg-input",
+                        lines=1,
+                        max_lines=6,
+                    )
+                    send = gr.Button(
+                        "↑",
+                        elem_id="send-btn",
+                        scale=0,
+                        min_width=34,
+                    )
 
     # ── Events (unchanged) ────────────────────────────────────────
     msg.submit(chat, [msg, chatbot], [chatbot, msg])
