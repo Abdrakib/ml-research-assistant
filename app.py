@@ -1,6 +1,7 @@
 """
 ML Research Assistant — app.py
-Clean Gradio 6 native UI with professional dark theme.
+Warm off-white / parchment theme. Paper-like, editorial, calm.
+Gradio-native only. Backend logic unchanged.
 """
 
 _memory_store = {}
@@ -34,9 +35,7 @@ import tools.memory as _mem_module
 _mem_module._FORCE_OFFLINE_STORE = True
 _mem_module._OFFLINE_STORE = _memory_store
 
-# ---------------------------------------------------------------------------
-# Tool state
-# ---------------------------------------------------------------------------
+# ── Tool state ────────────────────────────────────────────────────────────────
 
 _tool_state = {
     "search": True, "weather": True, "calc": True,
@@ -85,9 +84,7 @@ TOOLS_LIST = [
     ("github",               "🐙 GitHub"),
 ]
 
-# ---------------------------------------------------------------------------
-# Backend
-# ---------------------------------------------------------------------------
+# ── Backend (unchanged) ───────────────────────────────────────────────────────
 
 def _title_from(hist):
     if not hist:
@@ -132,14 +129,14 @@ def chat(user_message, history):
 
     if tool_name == "memory" and tool_result == "Got it! I will remember that":
         history = list(history or [])
-        history.append({"role": "user", "content": user_message})
-        history.append({"role": "assistant", "content": "✅ Got it! I will remember that.\n\n*Tool: 🧠 Memory*"})
+        history.append({"role": "user",      "content": user_message})
+        history.append({"role": "assistant",  "content": "✅ Got it! I will remember that.\n\n*Tool: 🧠 Memory*"})
         return history, ""
 
     if tool_name == "memory" and tool_result.startswith("Here is what I know"):
         history = list(history or [])
-        history.append({"role": "user", "content": user_message})
-        history.append({"role": "assistant", "content": tool_result + "\n\n*Tool: 🧠 Memory*"})
+        history.append({"role": "user",      "content": user_message})
+        history.append({"role": "assistant",  "content": tool_result + "\n\n*Tool: 🧠 Memory*"})
         return history, ""
 
     auto_notice = ""
@@ -147,16 +144,15 @@ def chat(user_message, history):
         auto_notice = build_auto_enable_notice(tool_name)
 
     full_prompt = build_prompt(user_message, tool_result, get_memory_context())
-    reply = generate_response(full_prompt)
+    reply       = generate_response(full_prompt)
 
     if auto_notice:
         reply = f"{auto_notice}\n\n{reply}"
 
-    label = _TOOL_LABELS.get(tool_name, "No tool")
-    reply += f"\n\n*Tool: {label}*"
+    reply += f"\n\n*Tool: {_TOOL_LABELS.get(tool_name, 'No tool')}*"
 
     history = list(history or [])
-    history.append({"role": "user", "content": user_message})
+    history.append({"role": "user",      "content": user_message})
     history.append({"role": "assistant", "content": reply})
     return history, ""
 
@@ -165,8 +161,8 @@ def new_chat(history, archives):
     arch = list(archives or [])
     if history:
         arch.insert(0, {
-            "id": uuid.uuid4().hex,
-            "title": _title_from(history),
+            "id":       uuid.uuid4().hex,
+            "title":    _title_from(history),
             "messages": copy.deepcopy(history),
         })
     return [], arch
@@ -175,411 +171,510 @@ def new_chat(history, archives):
 def fetch_news():
     feed = get_ai_news_feed()
     if not feed:
-        return "No news available right now. Try again later."
-    lines = ["# 📰 Latest AI News\n"]
+        return "*No news right now — try again later.*"
+    lines = ["#### Latest AI News\n"]
     for item in feed[:6]:
-        lines.append(f"### {item['title']}")
-        lines.append(f"*{item['tag']} · {item['source']} · {item['time']}*")
+        lines.append(f"**{item['title']}**")
+        lines.append(f"*{item['tag']} · {item['source']} · {item['time']}*\n")
         lines.append(f"{item['summary']}\n")
+        lines.append("---")
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# CSS
-# ---------------------------------------------------------------------------
+# ── Theme — warm parchment / off-white ───────────────────────────────────────
+
+theme = gr.themes.Base(
+    primary_hue=gr.themes.colors.orange,
+    secondary_hue=gr.themes.colors.stone,
+    neutral_hue=gr.themes.colors.stone,
+    font=gr.themes.GoogleFont("Inter"),
+).set(
+    # Page backgrounds — parchment / cream
+    background_fill_primary="#f5f0e8",
+    background_fill_secondary="#ede8df",
+    background_fill_primary_dark="#f5f0e8",
+    background_fill_secondary_dark="#ede8df",
+
+    # Borders — hair-thin, warm
+    border_color_primary="#ddd5c8",
+    border_color_primary_dark="#ddd5c8",
+
+    # Text — muted brown-gray, not black
+    body_text_color="#3d3530",
+    body_text_color_dark="#3d3530",
+    body_text_color_subdued="#8c7f74",
+    body_text_color_subdued_dark="#8c7f74",
+
+    # Buttons
+    button_primary_background_fill="#b45309",
+    button_primary_background_fill_hover="#92400e",
+    button_primary_text_color="#ffffff",
+    button_secondary_background_fill="#ede8df",
+    button_secondary_background_fill_hover="#e5dfd5",
+    button_secondary_text_color="#5c4f44",
+    button_secondary_border_color="#ddd5c8",
+
+    # Inputs — slightly warmer than page
+    input_background_fill="#faf7f2",
+    input_background_fill_dark="#faf7f2",
+    input_border_color="#ddd5c8",
+    input_border_color_focus="#b45309",
+    input_placeholder_color="#b5a99e",
+
+    # Radius
+    radius_sm="6px",
+    radius_md="10px",
+    radius_lg="14px",
+    radius_xxl="20px",
+
+    # No shadows — flat paper feel
+    shadow_drop="none",
+    shadow_drop_lg="none",
+    shadow_spread="0px",
+)
+
+# ── CSS — paper-like, flat, editorial ────────────────────────────────────────
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-/* ── Global ─────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
-body { background: #0f0f13 !important; }
-
+/* ── Base ───────────────────────────────────────────────────── */
+footer { display: none !important; }
 .gradio-container {
-    background: #0f0f13 !important;
-    font-family: 'Inter', sans-serif !important;
     max-width: 100% !important;
     padding: 0 !important;
-    margin: 0 !important;
+    background: #f5f0e8 !important;
 }
+body { background: #f5f0e8 !important; }
 
-footer { display: none !important; }
+/* ── Page row ────────────────────────────────────────────────── */
+#page-row { gap: 0 !important; min-height: 100vh; }
 
-/* ── Layout ──────────────────────────────────────────────────── */
-.contain { padding: 0 !important; }
-.gap     { gap: 4px !important; }
-
-/* ── Sidebar ──────────────────────────────────────────────────── */
-#sidebar {
-    background: #16161f !important;
-    border-right: 1px solid #2a2a3a !important;
+/* ── Sidebar — quiet, receding ───────────────────────────────── */
+#sidebar-col {
+    background: #ede8df !important;
+    border-right: 1px solid #e8e2d8 !important;
     padding: 0 !important;
     min-height: 100vh !important;
+    max-width: 250px !important;
 }
 
-/* App title */
-#app-title {
-    background: #16161f !important;
-    border: none !important;
+/* App name */
+#app-name {
+    padding: 0 !important;
+    margin: 0 !important;
+    border-bottom: 1px solid #ddd5c8 !important;
+}
+#app-name p {
+    padding: 16px 16px 12px !important;
+    margin: 0 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #3d3530 !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* Model badge in sidebar */
+#model-badge {
     padding: 0 !important;
     margin: 0 !important;
 }
-#app-title p {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: #f1f5f9 !important;
-    padding: 14px 14px 10px !important;
-    border-bottom: 1px solid #2a2a3a !important;
+#model-badge p {
+    padding: 0 16px 10px !important;
     margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
+    font-size: 10px !important;
+    color: #c2b8ae !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.02em !important;
+    border-bottom: 1px solid #ddd5c8 !important;
 }
 
 /* New chat button */
 #new-chat-btn {
-    margin: 8px 8px 4px !important;
-    background: #0f0f13 !important;
-    border: 1px solid #2a2a3a !important;
-    color: #94a3b8 !important;
-    border-radius: 8px !important;
+    margin: 10px 10px 4px !important;
+    width: calc(100% - 20px) !important;
+    border-radius: 7px !important;
     font-size: 12px !important;
-    font-family: 'Inter', sans-serif !important;
-    transition: all 0.15s !important;
-    width: calc(100% - 16px) !important;
+    padding: 6px 12px !important;
+    background: #f5f0e8 !important;
+    border: 1px solid #ddd5c8 !important;
+    color: #7a6e65 !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    box-shadow: none !important;
 }
 #new-chat-btn:hover {
-    background: #1e1e2e !important;
-    color: #e2e8f0 !important;
-    border-color: #3a3a4a !important;
+    background: #ece6dc !important;
+    color: #3d3530 !important;
+    border-color: #cfc7bb !important;
 }
 
 /* Sidebar tabs */
-#sidebar-tabs {
-    background: #16161f !important;
-    border: none !important;
-}
-#sidebar-tabs .tab-nav {
-    background: #16161f !important;
-    border-bottom: 1px solid #2a2a3a !important;
-    padding: 0 6px !important;
+#sidebar-tabs > .tab-nav {
+    background: transparent !important;
+    border-bottom: 1px solid #e8e2d8 !important;
+    padding: 0 10px !important;
     gap: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
 }
-#sidebar-tabs .tab-nav button {
+#sidebar-tabs > .tab-nav > button {
     background: transparent !important;
     border: none !important;
     border-bottom: 2px solid transparent !important;
     border-radius: 0 !important;
-    color: #64748b !important;
+    color: #b5a99e !important;
     font-size: 11px !important;
     font-weight: 500 !important;
-    padding: 8px 10px !important;
-    font-family: 'Inter', sans-serif !important;
-    transition: all 0.15s !important;
+    padding: 8px 8px !important;
+    margin: 0 !important;
+    transition: color 0.15s !important;
+    box-shadow: none !important;
 }
-#sidebar-tabs .tab-nav button.selected {
-    color: #D97706 !important;
-    border-bottom-color: #D97706 !important;
+#sidebar-tabs > .tab-nav > button.selected {
+    color: #b45309 !important;
+    border-bottom-color: #b45309 !important;
     background: transparent !important;
 }
 #sidebar-tabs .tabitem {
-    background: #16161f !important;
-    border: none !important;
-    padding: 6px 0 !important;
-}
-
-/* History buttons */
-.hist-btn button {
     background: transparent !important;
     border: none !important;
-    color: #64748b !important;
-    text-align: left !important;
+    padding: 6px 0 !important;
+    box-shadow: none !important;
+}
+
+/* History items */
+.hist-btn > button {
+    background: transparent !important;
+    border: none !important;
+    color: #8c7f74 !important;
     font-size: 11px !important;
-    padding: 6px 12px !important;
-    border-radius: 6px !important;
-    margin: 1px 6px !important;
-    width: calc(100% - 12px) !important;
-    font-family: 'Inter', sans-serif !important;
+    padding: 5px 14px !important;
+    border-radius: 5px !important;
+    text-align: left !important;
     justify-content: flex-start !important;
+    width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-shadow: none !important;
     transition: all 0.12s !important;
 }
-.hist-btn button:hover {
-    background: #1e1e2e !important;
-    color: #e2e8f0 !important;
+.hist-btn > button:hover {
+    background: #e8e2d8 !important;
+    color: #3d3530 !important;
 }
 
 /* Tool checkboxes */
-#tools-container {
-    padding: 4px 8px !important;
-    background: #16161f !important;
-}
-#tools-container .wrap {
-    gap: 2px !important;
-}
-#tools-container label {
-    color: #94a3b8 !important;
+#tools-tab label {
     font-size: 11px !important;
-    font-family: 'Inter', sans-serif !important;
-    padding: 5px 8px !important;
-    border-radius: 6px !important;
-    transition: background 0.12s !important;
+    color: #7a6e65 !important;
+    gap: 8px !important;
+    padding: 4px 14px !important;
+    border-radius: 5px !important;
 }
-#tools-container label:hover {
-    background: #1e1e2e !important;
-}
-#tools-container input[type=checkbox] {
-    accent-color: #a78bfa !important;
-}
+#tools-tab label:hover { background: #e8e2d8 !important; }
+#tools-tab input[type=checkbox] { accent-color: #b45309 !important; }
 
 /* News */
-#news-container {
-    background: #16161f !important;
-    padding: 0 6px !important;
-}
-#news-box {
-    background: transparent !important;
-    border: none !important;
-}
-#news-box textarea {
-    background: #0f0f13 !important;
-    border: 1px solid #2a2a3a !important;
-    color: #94a3b8 !important;
+#news-tab { padding: 0 10px !important; }
+#news-refresh-btn {
     font-size: 11px !important;
-    font-family: 'Inter', sans-serif !important;
-    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+    background: #f5f0e8 !important;
+    border: 1px solid #ddd5c8 !important;
+    color: #7a6e65 !important;
+    box-shadow: none !important;
+}
+#news-refresh-btn:hover { color: #b45309 !important; border-color: #b45309 !important; }
+#news-box { background: transparent !important; border: none !important; }
+#news-box p, #news-box li {
+    font-size: 11px !important;
+    color: #8c7f74 !important;
     line-height: 1.6 !important;
 }
-#news-refresh {
-    background: #0f0f13 !important;
-    border: 1px solid #2a2a3a !important;
-    color: #94a3b8 !important;
-    border-radius: 6px !important;
-    font-size: 11px !important;
-    font-family: 'Inter', sans-serif !important;
-    margin-bottom: 6px !important;
-    width: 100% !important;
-}
-#news-refresh:hover {
-    border-color: #D97706 !important;
-    color: #D97706 !important;
-}
+#news-box strong { color: #3d3530 !important; font-size: 11px !important; }
+#news-box hr { border-color: #ddd5c8 !important; margin: 8px 0 !important; }
 
-/* ── Main chat area ───────────────────────────────────────────── */
+/* ── Main area ───────────────────────────────────────────────── */
 #main-col {
-    background: #0f0f13 !important;
+    background: #f5f0e8 !important;
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    min-height: 100vh !important;
 }
 
-/* Chat header */
+/* Header — just a thin line, minimal text */
 #chat-header {
-    background: #0f0f13 !important;
-    border: none !important;
-    border-bottom: 1px solid #2a2a3a !important;
     padding: 0 !important;
     margin: 0 !important;
+    background: #f5f0e8 !important;
+    border-bottom: 1px solid #ddd5c8 !important;
 }
 #chat-header p {
-    padding: 12px 18px !important;
+    padding: 10px 24px !important;
     margin: 0 !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: #f1f5f9 !important;
-    display: flex !important;
+    font-size: 11px !important;
+    color: #b5a99e !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.03em !important;
+}
+
+/* Centered chat column */
+#chat-center {
+    flex: 1 !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    padding: 0 !important;
 }
 
 /* Chatbot */
 #chatbot {
-    background: #0f0f13 !important;
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
     border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
     flex: 1 !important;
+    overflow-y: auto !important;
 }
 #chatbot .bubble-wrap {
-    background: #0f0f13 !important;
-    padding: 16px !important;
-}
-
-/* User bubble */
-#chatbot .message.user > div {
-    background: #1e1e40 !important;
-    color: #e2e8f0 !important;
-    border-radius: 14px 14px 3px 14px !important;
-    border: none !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 13px !important;
-    line-height: 1.6 !important;
-    padding: 10px 14px !important;
-}
-
-/* Bot bubble */
-#chatbot .message.bot > div {
-    background: #16161f !important;
-    color: #e2e8f0 !important;
-    border-radius: 3px 14px 14px 14px !important;
-    border: 1px solid #2a2a3a !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 13px !important;
-    line-height: 1.6 !important;
-    padding: 10px 14px !important;
-}
-
-/* Bot avatar */
-#chatbot .message.bot .avatar-container img,
-#chatbot .message.bot .avatar-container {
-    background: #1e1e40 !important;
-    border-radius: 50% !important;
-}
-
-/* ── Input area ───────────────────────────────────────────────── */
-#input-row {
-    background: #0f0f13 !important;
-    border-top: 1px solid #2a2a3a !important;
-    padding: 10px 14px !important;
+    background: transparent !important;
+    padding: 32px 0 16px !important;
     gap: 8px !important;
-    align-items: flex-end !important;
 }
 
+/* User messages — warm parchment bubble */
+#chatbot .message.user { justify-content: flex-end !important; }
+#chatbot .message.user > div {
+    background: #ede8df !important;
+    color: #3d3530 !important;
+    border-radius: 16px 16px 4px 16px !important;
+    border: 1px solid #ddd5c8 !important;
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    padding: 10px 16px !important;
+    max-width: 78% !important;
+    box-shadow: none !important;
+}
+
+/* Assistant messages — pure text on page, no bubble */
+#chatbot .message.bot > div {
+    background: transparent !important;
+    color: #3d3530 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.85 !important;
+    padding: 6px 0 !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+}
+
+/* Bot avatar — small, warm */
+#chatbot .message.bot .avatar-container {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border-radius: 50% !important;
+    background: #ede8df !important;
+    border: 1px solid #ddd5c8 !important;
+    overflow: hidden !important;
+}
+
+/* Remove heavy avatar panel chrome */
+#chatbot .message { padding: 4px 0 !important; }
+#chatbot .message .message-buttons { opacity: 0 !important; transition: opacity 0.2s !important; }
+#chatbot .message:hover .message-buttons { opacity: 1 !important; }
+
+/* ── Composer — integrated rounded bar ───────────────────────── */
+#composer-wrap {
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    padding: 12px 0 32px !important;
+}
+
+#composer-row {
+    align-items: flex-end !important;
+    gap: 0 !important;
+    background: #faf7f2 !important;
+    border: 1px solid #ddd5c8 !important;
+    border-radius: 14px !important;
+    padding: 6px 6px 6px 16px !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+    box-shadow: none !important;
+}
+#composer-row:focus-within {
+    border-color: #b45309 !important;
+    box-shadow: 0 0 0 3px rgba(180,83,9,0.08) !important;
+}
+
+/* Textbox inside composer */
 #msg-input {
     background: transparent !important;
     border: none !important;
-    flex: 1 !important;
+    box-shadow: none !important;
 }
 #msg-input textarea {
-    background: #16161f !important;
-    border: 1px solid #2a2a3a !important;
-    border-radius: 10px !important;
-    color: #e2e8f0 !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 13px !important;
-    padding: 10px 14px !important;
-    resize: none !important;
-    line-height: 1.5 !important;
-    transition: border-color 0.2s !important;
-}
-#msg-input textarea:focus {
-    border-color: #D97706 !important;
-    box-shadow: 0 0 0 2px rgba(217,119,6,0.15) !important;
-    outline: none !important;
-}
-#msg-input textarea::placeholder { color: #3a3a4a !important; }
-#msg-input label { display: none !important; }
-
-/* Send button — GOLD */
-#send-btn {
-    background: #D97706 !important;
+    background: transparent !important;
     border: none !important;
-    border-radius: 8px !important;
-    color: white !important;
-    min-width: 42px !important;
-    max-width: 42px !important;
-    height: 42px !important;
-    font-size: 18px !important;
+    box-shadow: none !important;
+    color: #3d3530 !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    padding: 4px 0 !important;
+    resize: none !important;
+    outline: none !important;
+    min-height: 28px !important;
+    font-family: 'Inter', sans-serif !important;
+}
+#msg-input textarea::placeholder { color: #b5a99e !important; }
+#msg-input textarea:focus { outline: none !important; box-shadow: none !important; }
+#msg-input label { display: none !important; }
+#msg-input .wrap {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
     padding: 0 !important;
-    transition: all 0.15s !important;
+}
+
+/* Send button — terracotta, inside the composer bar */
+#send-btn {
+    background: #b45309 !important;
+    border: none !important;
+    border-radius: 9px !important;
+    color: #fff !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    font-size: 16px !important;
+    padding: 0 !important;
     flex-shrink: 0 !important;
+    align-self: flex-end !important;
+    box-shadow: none !important;
+    transition: background 0.15s, transform 0.1s !important;
+    line-height: 1 !important;
 }
 #send-btn:hover {
-    background: #B45309 !important;
+    background: #92400e !important;
     transform: scale(1.05) !important;
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+/* ── Scrollbar — minimal ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #D97706; }
+::-webkit-scrollbar-thumb { background: #ddd5c8; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #b45309; }
 """
 
-# ---------------------------------------------------------------------------
-# Gradio App
-# ---------------------------------------------------------------------------
+# ── Gradio layout ─────────────────────────────────────────────────────────────
 
-with gr.Blocks(title="ML Research Assistant", fill_height=True, css=CSS) as demo:
+with gr.Blocks(theme=theme, css=CSS, title="ML Research Assistant", fill_height=True) as demo:
 
     archive_state = gr.State([])
 
-    with gr.Row(equal_height=True):
+    with gr.Row(elem_id="page-row", equal_height=False):
 
         # ── SIDEBAR ──────────────────────────────────────────────
-        with gr.Column(scale=1, min_width=230, elem_id="sidebar"):
+        with gr.Column(scale=0, min_width=240, elem_id="sidebar-col"):
 
-            gr.Markdown("🧠 **ML Research** · *Assistant*", elem_id="app-title")
+            gr.Markdown("🧠 **ML Research Assistant**", elem_id="app-name")
+            gr.Markdown("Qwen2.5-7B · 17 tools", elem_id="model-badge")
 
-            new_chat_btn = gr.Button("➕  New chat", elem_id="new-chat-btn", size="sm")
+            new_chat_btn = gr.Button(
+                "＋  New chat",
+                elem_id="new-chat-btn",
+                size="sm",
+            )
 
             with gr.Tabs(elem_id="sidebar-tabs"):
 
-                with gr.Tab("💬 History"):
+                with gr.Tab("History"):
                     @gr.render(inputs=[archive_state])
                     def render_history(archives):
-                        for conv in (archives or []):
+                        if not archives:
+                            gr.Markdown("*No chats yet*")
+                            return
+                        for conv in archives:
                             b = gr.Button(
-                                "💬 " + (conv.get("title") or "Untitled")[:32],
+                                "  " + (conv.get("title") or "Untitled")[:32],
                                 elem_classes=["hist-btn"],
                                 size="sm",
                             )
                             b.click(
                                 lambda c=conv: c.get("messages") or [],
-                                None, chatbot,
+                                inputs=None,
+                                outputs=chatbot,
                             )
 
-                with gr.Tab("⚡ Tools"):
-                    with gr.Column(elem_id="tools-container"):
-                        for tool_id, tool_label in TOOLS_LIST:
-                            cb = gr.Checkbox(
-                                label=tool_label,
-                                value=_tool_state.get(tool_id, True),
-                            )
-                            def make_toggle(tid):
-                                def toggle(val):
-                                    _tool_state[tid] = val
-                                return toggle
-                            cb.change(make_toggle(tool_id), inputs=[cb], outputs=[])
-
-                with gr.Tab("📰 AI News"):
-                    with gr.Column(elem_id="news-container"):
-                        news_refresh = gr.Button("🔄 Refresh News", elem_id="news-refresh", size="sm")
-                        news_box = gr.Markdown(
-                            value="*Click refresh to load the latest AI news.*",
-                            elem_id="news-box",
+                with gr.Tab("Tools", elem_id="tools-tab"):
+                    for tool_id, tool_label in TOOLS_LIST:
+                        cb = gr.Checkbox(
+                            label=tool_label,
+                            value=_tool_state.get(tool_id, True),
+                            container=False,
                         )
-                        news_refresh.click(fetch_news, inputs=[], outputs=[news_box])
+                        def _make_toggle(tid):
+                            def _toggle(v): _tool_state[tid] = v
+                            return _toggle
+                        cb.change(_make_toggle(tool_id), inputs=cb, outputs=[])
+
+                with gr.Tab("AI News", elem_id="news-tab"):
+                    news_refresh = gr.Button(
+                        "↻  Refresh",
+                        size="sm",
+                        elem_id="news-refresh-btn",
+                    )
+                    news_box = gr.Markdown(
+                        "*Click Refresh to load the latest AI news.*",
+                        elem_id="news-box",
+                    )
+                    news_refresh.click(fetch_news, outputs=news_box)
 
         # ── MAIN CHAT ─────────────────────────────────────────────
-        with gr.Column(scale=5, elem_id="main-col"):
+        with gr.Column(scale=1, elem_id="main-col"):
 
+            # Minimal header — just model info, very quiet
             gr.Markdown(
-                "**ML Research Assistant** &nbsp;&nbsp; `Qwen2.5-7B`",
+                "ML Research Assistant",
                 elem_id="chat-header",
             )
 
-            chatbot = gr.Chatbot(
-                elem_id="chatbot",
-                label="",
-                show_label=False,
-                height="80vh",
-                type="messages",
-                show_copy_button=True,
-                allow_tags=False,
-                avatar_images=(None, "https://api.dicebear.com/7.x/bottts/svg?seed=mlresearch"),
-            )
+            with gr.Column(elem_id="chat-center"):
 
-            with gr.Row(elem_id="input-row"):
-                msg = gr.Textbox(
-                    placeholder="Ask about papers, models, benchmarks...",
+                chatbot = gr.Chatbot(
+                    elem_id="chatbot",
+                    label="",
                     show_label=False,
-                    scale=9,
-                    container=False,
-                    elem_id="msg-input",
-                    lines=1,
-                    max_lines=4,
+                    height=None,
+                    type="messages",
+                    show_copy_button=True,
+                    avatar_images=(
+                        None,
+                        "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=ml&backgroundColor=ede8df",
+                    ),
                 )
-                send = gr.Button("↑", elem_id="send-btn", scale=1, min_width=42)
 
-    # ── Events ────────────────────────────────────────────────────
+                with gr.Column(elem_id="composer-wrap"):
+                    with gr.Row(elem_id="composer-row"):
+                        msg = gr.Textbox(
+                            placeholder="Ask about papers, models, benchmarks, or news…",
+                            show_label=False,
+                            scale=1,
+                            container=False,
+                            elem_id="msg-input",
+                            lines=1,
+                            max_lines=6,
+                        )
+                        send = gr.Button(
+                            "↑",
+                            elem_id="send-btn",
+                            scale=0,
+                            min_width=34,
+                        )
+
+    # ── Events (unchanged) ────────────────────────────────────────
     msg.submit(chat, [msg, chatbot], [chatbot, msg])
     send.click(chat, [msg, chatbot], [chatbot, msg])
     new_chat_btn.click(new_chat, [chatbot, archive_state], [chatbot, archive_state])
