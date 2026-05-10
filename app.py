@@ -221,16 +221,7 @@ theme = gr.themes.Base(
     input_border_color_focus="#b45309",
     input_placeholder_color="#b5a99e",
 
-    # Radius
-    radius_sm="6px",
-    radius_md="10px",
-    radius_lg="14px",
-    radius_xxl="20px",
 
-    # No shadows — flat paper feel
-    shadow_drop="none",
-    shadow_drop_lg="none",
-    shadow_spread="0px",
 )
 
 # ── CSS — paper-like, flat, editorial ────────────────────────────────────────
