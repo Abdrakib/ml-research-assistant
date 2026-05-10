@@ -307,6 +307,12 @@ body, .gradio-container {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: #ddd5c8; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #b45309; }
+
+/* Hide Gradio processing status text */
+.eta-bar { display: none !important; }
+.progress-text { display: none !important; }
+.progress-bar-wrap { display: none !important; }
+.generating { display: none !important; }
 """
 
 # ---------------------------------------------------------------------------
