@@ -1,7 +1,5 @@
 """
 ML Research Assistant — app.py
-Warm off-white / parchment theme. Paper-like, editorial, calm.
-Gradio-native only. Backend logic unchanged.
 """
 
 _memory_store = {}
@@ -35,7 +33,9 @@ import tools.memory as _mem_module
 _mem_module._FORCE_OFFLINE_STORE = True
 _mem_module._OFFLINE_STORE = _memory_store
 
-# ── Tool state ────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Tool state
+# ---------------------------------------------------------------------------
 
 _tool_state = {
     "search": True, "weather": True, "calc": True,
@@ -84,7 +84,9 @@ TOOLS_LIST = [
     ("github",               "🐙 GitHub"),
 ]
 
-# ── Backend (unchanged) ───────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Backend
+# ---------------------------------------------------------------------------
 
 def _title_from(hist):
     if not hist:
@@ -130,7 +132,7 @@ def chat(user_message, history):
     if tool_name == "memory" and tool_result == "Got it! I will remember that":
         history = list(history or [])
         history.append({"role": "user",      "content": user_message})
-        history.append({"role": "assistant",  "content": "✅ Got it! I will remember that.\n\n*Tool: 🧠 Memory*"})
+        history.append({"role": "assistant",  "content": "✅ Got it!\n\n*Tool: 🧠 Memory*"})
         return history, ""
 
     if tool_name == "memory" and tool_result.startswith("Here is what I know"):
@@ -145,10 +147,8 @@ def chat(user_message, history):
 
     full_prompt = build_prompt(user_message, tool_result, get_memory_context())
     reply       = generate_response(full_prompt)
-
     if auto_notice:
         reply = f"{auto_notice}\n\n{reply}"
-
     reply += f"\n\n*Tool: {_TOOL_LABELS.get(tool_name, 'No tool')}*"
 
     history = list(history or [])
@@ -181,460 +181,175 @@ def fetch_news():
     return "\n".join(lines)
 
 
-
-# ── CSS — paper-like, flat, editorial ────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# CSS — colors and sidebar ONLY. Nothing on textarea/input/button layout.
+# ---------------------------------------------------------------------------
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-/* Force Inter font everywhere */
-body, .gradio-container, button, input, textarea, select {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-}
-
-/* ── Base colors replacing gr.themes ───────────────────────── */
-body { background: #f5f0e8 !important; }
-.gradio-container { background: #f5f0e8 !important; max-width: 100% !important; padding: 0 !important; }
-.gradio-container * { color: #3d3530; }
-
-/* Inputs */
-input, textarea {
-    background: #faf7f2 !important;
-    border: 1px solid #ddd5c8 !important;
-    color: #3d3530 !important;
-}
-input:focus, textarea:focus {
-    border-color: #b45309 !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(180,83,9,0.08) !important;
-}
-
-/* Primary buttons */
-.gr-button-primary, button.primary {
-    background: #b45309 !important;
-    border-color: #b45309 !important;
-    color: white !important;
-}
-
-/* Secondary buttons */
-.gr-button-secondary, button.secondary {
-    background: #ede8df !important;
-    border-color: #ddd5c8 !important;
-    color: #5c4f44 !important;
-}
-
-/* Panels */
-.gr-panel { background: #f5f0e8 !important; border-color: #ddd5c8 !important; }
-
-/* ── Base ───────────────────────────────────────────────────── */
 footer { display: none !important; }
-.gradio-container {
-    max-width: 100% !important;
-    padding: 0 !important;
+
+body, .gradio-container {
     background: #f5f0e8 !important;
+    font-family: 'Inter', sans-serif !important;
 }
-body { background: #f5f0e8 !important; }
+.gradio-container { max-width: 100% !important; padding: 0 !important; }
 
-/* ── Page row ────────────────────────────────────────────────── */
-#page-row { gap: 0 !important; min-height: 100vh; }
-
-/* ── Sidebar — quiet, receding ───────────────────────────────── */
 #sidebar-col {
     background: #ede8df !important;
-    border-right: 1px solid #e8e2d8 !important;
+    border-right: 1px solid #ddd5c8 !important;
     padding: 0 !important;
-    min-height: 100vh !important;
-    max-width: 250px !important;
 }
 
-/* App name */
-#app-name {
-    padding: 0 !important;
-    margin: 0 !important;
-    border-bottom: 1px solid #ddd5c8 !important;
-}
-#app-name p {
-    padding: 16px 16px 12px !important;
-    margin: 0 !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: #3d3530 !important;
-    letter-spacing: -0.01em !important;
-}
-
-/* Model badge in sidebar */
-#model-badge {
-    padding: 0 !important;
-    margin: 0 !important;
-}
 #model-badge p {
-    padding: 0 16px 10px !important;
-    margin: 0 !important;
     font-size: 10px !important;
-    color: #c2b8ae !important;
-    font-weight: 400 !important;
-    letter-spacing: 0.02em !important;
-    border-bottom: 1px solid #ddd5c8 !important;
-}
-
-/* Sidebar top row */
-#sidebar-top-row {
-    padding: 8px 10px 4px !important;
-    gap: 6px !important;
-    margin: 0 !important;
-}
-
-/* Toggle button */
-#toggle-btn {
-    min-width: 32px !important;
-    max-width: 32px !important;
-    padding: 6px 0 !important;
-    background: #f5f0e8 !important;
-    border: 1px solid #ddd5c8 !important;
     color: #b5a99e !important;
-    border-radius: 7px !important;
-    font-size: 11px !important;
-    box-shadow: none !important;
-}
-#toggle-btn:hover {
-    background: #ece6dc !important;
-    color: #7a6e65 !important;
+    padding: 4px 14px 10px !important;
+    margin: 0 !important;
 }
 
-/* New chat button */
 #new-chat-btn {
-    margin: 0 !important;
-    width: 100% !important;
-    border-radius: 7px !important;
-    font-size: 12px !important;
-    padding: 6px 12px !important;
+    margin: 8px 10px !important;
     background: #f5f0e8 !important;
     border: 1px solid #ddd5c8 !important;
     color: #7a6e65 !important;
-    justify-content: flex-start !important;
-    gap: 6px !important;
-    box-shadow: none !important;
+    border-radius: 7px !important;
+    width: calc(100% - 20px) !important;
 }
 #new-chat-btn:hover {
     background: #ece6dc !important;
     color: #3d3530 !important;
-    border-color: #cfc7bb !important;
 }
 
-/* Sidebar tabs */
-#sidebar-tabs > .tab-nav {
+#sidebar-tabs .tab-nav {
     background: transparent !important;
     border-bottom: 1px solid #e8e2d8 !important;
-    padding: 0 10px !important;
-    gap: 0 !important;
-    margin: 0 !important;
-    box-shadow: none !important;
 }
-#sidebar-tabs > .tab-nav > button {
-    background: transparent !important;
-    border: none !important;
-    border-bottom: 2px solid transparent !important;
-    border-radius: 0 !important;
+#sidebar-tabs .tab-nav button {
     color: #b5a99e !important;
     font-size: 11px !important;
-    font-weight: 500 !important;
-    padding: 8px 8px !important;
-    margin: 0 !important;
-    transition: color 0.15s !important;
-    box-shadow: none !important;
+    background: transparent !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
 }
-#sidebar-tabs > .tab-nav > button.selected {
+#sidebar-tabs .tab-nav button.selected {
     color: #b45309 !important;
     border-bottom-color: #b45309 !important;
-    background: transparent !important;
 }
 #sidebar-tabs .tabitem {
     background: transparent !important;
     border: none !important;
-    padding: 6px 0 !important;
-    box-shadow: none !important;
 }
 
-/* History items */
-.hist-btn > button {
+.hist-btn button {
     background: transparent !important;
     border: none !important;
     color: #8c7f74 !important;
     font-size: 11px !important;
-    padding: 5px 14px !important;
-    border-radius: 5px !important;
     text-align: left !important;
     justify-content: flex-start !important;
+    border-radius: 5px !important;
+    padding: 5px 12px !important;
     width: 100% !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    box-shadow: none !important;
-    transition: all 0.12s !important;
 }
-.hist-btn > button:hover {
-    background: #e8e2d8 !important;
+.hist-btn button:hover {
+    background: #e5dfd5 !important;
     color: #3d3530 !important;
 }
 
-/* Tool checkboxes */
-#tools-tab label {
-    font-size: 11px !important;
-    color: #7a6e65 !important;
-    gap: 8px !important;
-    padding: 4px 14px !important;
-    border-radius: 5px !important;
-}
-#tools-tab label:hover { background: #e8e2d8 !important; }
+#tools-tab label { font-size: 11px !important; color: #7a6e65 !important; }
 #tools-tab input[type=checkbox] { accent-color: #b45309 !important; }
 
-/* News */
-#news-tab { padding: 0 10px !important; }
-#news-refresh-btn {
-    font-size: 11px !important;
-    margin-bottom: 8px !important;
-    width: 100% !important;
-    background: #f5f0e8 !important;
-    border: 1px solid #ddd5c8 !important;
-    color: #7a6e65 !important;
-    box-shadow: none !important;
-}
-#news-refresh-btn:hover { color: #b45309 !important; border-color: #b45309 !important; }
-#news-box { background: transparent !important; border: none !important; }
-#news-box p, #news-box li {
-    font-size: 11px !important;
-    color: #8c7f74 !important;
-    line-height: 1.6 !important;
-}
-#news-box strong { color: #3d3530 !important; font-size: 11px !important; }
-#news-box hr { border-color: #ddd5c8 !important; margin: 8px 0 !important; }
+#news-box p { font-size: 11px !important; color: #8c7f74 !important; }
+#news-box strong { color: #3d3530 !important; }
+#news-box hr { border-color: #e8e2d8 !important; }
 
-/* ── Main area ───────────────────────────────────────────────── */
-#main-col {
-    background: #f5f0e8 !important;
-    padding: 0 !important;
-}
+#main-col { background: #f5f0e8 !important; }
 
-/* Header — just a thin line, minimal text */
-#chat-header {
-    padding: 0 !important;
-    margin: 0 !important;
-    background: #f5f0e8 !important;
-    border-bottom: 1px solid #ddd5c8 !important;
-}
 #chat-header p {
-    padding: 10px 24px !important;
-    margin: 0 !important;
     font-size: 11px !important;
     color: #b5a99e !important;
-    font-weight: 400 !important;
-    letter-spacing: 0.03em !important;
+    padding: 10px 20px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid #e8e2d8 !important;
 }
 
-/* Centered chat column */
-#chat-center {
-    align-items: center !important;
-    padding: 0 !important;
-    overflow: visible !important;
-}
+#chatbot { background: #f5f0e8 !important; border: none !important; }
+#chatbot .bubble-wrap { background: #f5f0e8 !important; }
 
-/* Chatbot */
-#chatbot {
-    width: 100% !important;
-    max-width: 800px !important;
-    margin: 0 auto !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    overflow-y: auto !important;
-}
-#chatbot .bubble-wrap {
-    background: transparent !important;
-    padding: 32px 0 16px !important;
-    gap: 8px !important;
-}
-
-/* User messages — warm parchment bubble */
-#chatbot .message.user { justify-content: flex-end !important; }
 #chatbot .message.user > div {
     background: #ede8df !important;
+    border: 1px solid #ddd5c8 !important;
     color: #3d3530 !important;
     border-radius: 16px 16px 4px 16px !important;
-    border: 1px solid #ddd5c8 !important;
     font-size: 14px !important;
     line-height: 1.7 !important;
-    padding: 10px 16px !important;
-    max-width: 78% !important;
-    box-shadow: none !important;
 }
 
-/* Assistant messages — pure text on page, no bubble */
 #chatbot .message.bot > div {
     background: transparent !important;
-    color: #3d3530 !important;
     border: none !important;
-    border-radius: 0 !important;
-    font-size: 14px !important;
-    line-height: 1.85 !important;
-    padding: 6px 0 !important;
-    max-width: 100% !important;
-    box-shadow: none !important;
-}
-
-/* Bot avatar — small, warm */
-#chatbot .message.bot .avatar-container {
-    width: 26px !important;
-    height: 26px !important;
-    min-width: 26px !important;
-    border-radius: 50% !important;
-    background: #ede8df !important;
-    border: 1px solid #ddd5c8 !important;
-    overflow: hidden !important;
-}
-
-/* Remove heavy avatar panel chrome */
-#chatbot .message { padding: 4px 0 !important; }
-#chatbot .message .message-buttons { opacity: 0 !important; transition: opacity 0.2s !important; }
-#chatbot .message:hover .message-buttons { opacity: 1 !important; }
-
-/* ── Composer — integrated rounded bar ───────────────────────── */
-#composer-row {
-    width: 100% !important;
-    max-width: 800px !important;
-    margin: 0 auto !important;
-    padding: 6px 6px 6px 16px !important;
-    margin-bottom: 20px !important;
-    align-items: flex-end !important;
-    gap: 0 !important;
-    background: #faf7f2 !important;
-    border: 1px solid #ddd5c8 !important;
-    border-radius: 14px !important;
-    transition: border-color 0.2s, box-shadow 0.2s !important;
-    box-shadow: none !important;
-    position: relative !important;
-    pointer-events: auto !important;
-}
-#composer-row:focus-within {
-    border-color: #b45309 !important;
-    box-shadow: 0 0 0 3px rgba(180,83,9,0.08) !important;
-}
-/* Ensure textbox inside is fully clickable */
-#composer-row > div {
-    position: relative !important;
-    z-index: 1 !important;
-}
-
-/* Textbox inside composer */
-#msg-input {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-#msg-input textarea {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
     color: #3d3530 !important;
     font-size: 14px !important;
-    line-height: 1.6 !important;
-    padding: 4px 0 !important;
-    resize: none !important;
-    outline: none !important;
-    min-height: 28px !important;
-    font-family: 'Inter', sans-serif !important;
-    cursor: text !important;
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 20 !important;
-}
-#msg-input textarea::placeholder { color: #b5a99e !important; }
-#msg-input textarea:focus { outline: none !important; box-shadow: none !important; }
-#msg-input label { display: none !important; }
-#msg-input .wrap {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    cursor: text !important;
-    pointer-events: auto !important;
-    z-index: 15 !important;
-    position: relative !important;
-}
-#msg-input {
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 15 !important;
+    line-height: 1.8 !important;
 }
 
-/* Send button — terracotta, inside the composer bar */
 #send-btn {
     background: #b45309 !important;
-    border: none !important;
-    border-radius: 9px !important;
-    color: #fff !important;
-    min-width: 34px !important;
-    max-width: 34px !important;
-    height: 34px !important;
-    font-size: 16px !important;
-    padding: 0 !important;
-    flex-shrink: 0 !important;
-    align-self: flex-end !important;
-    box-shadow: none !important;
-    transition: background 0.15s, transform 0.1s !important;
-    line-height: 1 !important;
+    border-color: #b45309 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    min-width: 50px !important;
 }
-#send-btn:hover {
-    background: #92400e !important;
-    transform: scale(1.05) !important;
-}
+#send-btn:hover { background: #92400e !important; }
 
-/* ── Scrollbar — minimal ─────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #ddd5c8; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #b45309; }
 """
 
-# ── Gradio layout ─────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Layout
+# ---------------------------------------------------------------------------
 
 with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
 
     archive_state = gr.State([])
 
-    with gr.Row(elem_id="page-row", equal_height=False):
+    with gr.Row(equal_height=False):
 
         # ── SIDEBAR ──────────────────────────────────────────────
-        with gr.Column(scale=0, min_width=240, elem_id="sidebar-col") as sidebar_col:
+        with gr.Column(scale=1, min_width=240, elem_id="sidebar-col"):
 
-            gr.HTML('''
-            <div style="padding:16px 16px 10px;border-bottom:1px solid #e8e2d8;display:flex;align-items:center;gap:10px;">
-              <div style="width:30px;height:30px;border-radius:8px;background:#92600A;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span style="font-size:17px;line-height:1;">🧠</span>
+            gr.HTML("""
+            <div style="padding:14px 14px 8px;display:flex;align-items:center;
+                        gap:10px;border-bottom:1px solid #e8e2d8;">
+              <div style="width:30px;height:30px;border-radius:8px;
+                          background:#92600A;display:flex;align-items:center;
+                          justify-content:center;flex-shrink:0;font-size:16px;">
+                🧠
               </div>
               <div>
-                <div style="font-size:13px;font-weight:600;color:#3d3530;line-height:1.2;">ML Research Assistant</div>
+                <div style="font-size:13px;font-weight:600;color:#3d3530;
+                            font-family:Inter,sans-serif;line-height:1.2;">
+                  ML Research
+                </div>
+                <div style="font-size:10px;color:#b5a99e;
+                            font-family:Inter,sans-serif;">
+                  Assistant
+                </div>
               </div>
             </div>
-            ''', elem_id="app-name")
+            """)
+
             gr.Markdown("Qwen2.5-7B · 17 tools", elem_id="model-badge")
 
-            with gr.Row(elem_id="sidebar-top-row"):
-                new_chat_btn = gr.Button(
-                    "＋  New chat",
-                    elem_id="new-chat-btn",
-                    size="sm",
-                    scale=4,
-                )
-                toggle_btn = gr.Button(
-                    "◀",
-                    elem_id="toggle-btn",
-                    size="sm",
-                    scale=1,
-                )
+            new_chat_btn = gr.Button("＋  New chat", elem_id="new-chat-btn", size="sm")
 
             with gr.Tabs(elem_id="sidebar-tabs"):
 
-                with gr.Tab("History"):
+                with gr.Tab("💬 History"):
                     @gr.render(inputs=[archive_state])
                     def render_history(archives):
                         if not archives:
@@ -642,7 +357,7 @@ with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
                             return
                         for conv in archives:
                             b = gr.Button(
-                                "  " + (conv.get("title") or "Untitled")[:32],
+                                "  " + (conv.get("title") or "Untitled")[:30],
                                 elem_classes=["hist-btn"],
                                 size="sm",
                             )
@@ -652,7 +367,7 @@ with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
                                 outputs=chatbot,
                             )
 
-                with gr.Tab("Tools", elem_id="tools-tab"):
+                with gr.Tab("⚡ Tools", elem_id="tools-tab"):
                     for tool_id, tool_label in TOOLS_LIST:
                         cb = gr.Checkbox(
                             label=tool_label,
@@ -664,82 +379,46 @@ with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
                             return _toggle
                         cb.change(_make_toggle(tool_id), inputs=cb, outputs=[])
 
-                with gr.Tab("AI News", elem_id="news-tab"):
-                    news_refresh = gr.Button(
-                        "↻  Refresh",
-                        size="sm",
-                        elem_id="news-refresh-btn",
-                    )
+                with gr.Tab("📰 AI News"):
+                    news_refresh = gr.Button("🔄 Refresh", size="sm")
                     news_box = gr.Markdown(
-                        "*Click Refresh to load the latest AI news.*",
+                        "*Click Refresh to load news.*",
                         elem_id="news-box",
                     )
                     news_refresh.click(fetch_news, outputs=news_box)
 
         # ── MAIN CHAT ─────────────────────────────────────────────
-        with gr.Column(scale=1, elem_id="main-col"):
+        with gr.Column(scale=4, elem_id="main-col"):
 
-            # Minimal header — just model info, very quiet
             gr.Markdown(
-                "ML Research Assistant",
+                "ML Research Assistant · Qwen2.5-7B",
                 elem_id="chat-header",
             )
 
-            with gr.Column(elem_id="chat-center"):
+            chatbot = gr.Chatbot(
+                elem_id="chatbot",
+                label="",
+                show_label=False,
+                height=600,
+                type="messages",
+                show_copy_button=False,
+            )
 
-                chatbot = gr.Chatbot(
-                    elem_id="chatbot",
-                    label="",
+            with gr.Row():
+                msg = gr.Textbox(
+                    placeholder="Ask about papers, models, benchmarks…",
                     show_label=False,
-                    height=550,
-                    type="messages",
-                    show_copy_button=False,
-                    allow_tags=False,
-                    avatar_images=(
-                        None,
-                        "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=ml&backgroundColor=ede8df",
-                    ),
+                    scale=9,
+                    container=False,
+                    lines=1,
+                    max_lines=4,
                 )
+                send = gr.Button("↑", elem_id="send-btn", scale=1, min_width=50)
 
-                with gr.Row(elem_id="composer-row"):
-                    msg = gr.Textbox(
-                        placeholder="Ask about papers, models, benchmarks, or news…",
-                        show_label=False,
-                        scale=1,
-                        container=False,
-                        elem_id="msg-input",
-                        lines=1,
-                        max_lines=6,
-                    )
-                    send = gr.Button(
-                        "↑",
-                        elem_id="send-btn",
-                        scale=0,
-                        min_width=34,
-                    )
-
-    # ── Events (unchanged) ────────────────────────────────────────
+    # ── Events ────────────────────────────────────────────────────
     msg.submit(chat, [msg, chatbot], [chatbot, msg])
     send.click(chat, [msg, chatbot], [chatbot, msg])
     new_chat_btn.click(new_chat, [chatbot, archive_state], [chatbot, archive_state])
-
-    # Toggle sidebar visibility
-    sidebar_visible = gr.State(True)
-
-    def toggle_sidebar(visible):
-        new_visible = not visible
-        label = "▶" if not new_visible else "◀"
-        return (
-            gr.update(visible=new_visible),
-            gr.update(value=label),
-            new_visible,
-        )
-
-    toggle_btn.click(
-        toggle_sidebar,
-        inputs=[sidebar_visible],
-        outputs=[sidebar_col, toggle_btn, sidebar_visible],
-    )
 
 if __name__ == "__main__":
     demo.launch(share=True)
