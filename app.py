@@ -413,9 +413,6 @@ body { background: #f5f0e8 !important; }
 #main-col {
     background: #f5f0e8 !important;
     padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 100vh !important;
 }
 
 /* Header — just a thin line, minimal text */
@@ -436,9 +433,9 @@ body { background: #f5f0e8 !important; }
 
 /* Centered chat column */
 #chat-center {
-    flex: 1 !important;
     align-items: center !important;
     padding: 0 !important;
+    overflow: visible !important;
 }
 
 /* Chatbot */
@@ -449,7 +446,6 @@ body { background: #f5f0e8 !important; }
     border: none !important;
     background: transparent !important;
     box-shadow: none !important;
-    flex: 1 !important;
     overflow-y: auto !important;
 }
 #chatbot .bubble-wrap {
@@ -601,7 +597,7 @@ body { background: #f5f0e8 !important; }
 
 # ── Gradio layout ─────────────────────────────────────────────────────────────
 
-with gr.Blocks(title="ML Research Assistant", fill_height=True, css=CSS) as demo:
+with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
 
     archive_state = gr.State([])
 
@@ -695,7 +691,7 @@ with gr.Blocks(title="ML Research Assistant", fill_height=True, css=CSS) as demo
                     elem_id="chatbot",
                     label="",
                     show_label=False,
-                    height=None,
+                    height=550,
                     type="messages",
                     show_copy_button=False,
                     allow_tags=False,
