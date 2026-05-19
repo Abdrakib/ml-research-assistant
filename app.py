@@ -169,16 +169,50 @@ def new_chat(history, archives):
 
 
 def fetch_news():
+    """Returns (HTML cards, headline choices for dropdown)."""
     feed = get_ai_news_feed()
     if not feed:
-        return "*No news right now — try again later.*"
-    lines = ["#### Latest AI News\n"]
+        return "<p style='color:#b5a99e;font-size:12px;padding:12px;'>No news right now — try again later.</p>", []
+
+    cards = []
     for item in feed[:6]:
-        lines.append(f"**{item['title']}**")
-        lines.append(f"*{item['tag']} · {item['source']} · {item['time']}*\n")
-        lines.append(f"{item['summary']}\n")
-        lines.append("---")
-    return "\n".join(lines)
+        title   = item.get('title', '')
+        summary = item.get('summary', '')
+        tag     = item.get('tag', '')
+        source  = item.get('source', '')
+        time    = item.get('time', '')
+        url     = item.get('url', '')
+        color   = item.get('color', '#b45309')
+
+        # Article link — opens in new tab
+        link_html = f'<a href="{url}" target="_blank" rel="noopener noreferrer" style="font-size:10px;color:{color};text-decoration:none;border:0.5px solid {color}44;padding:2px 7px;border-radius:10px;background:{color}11;">Read article ↗</a>' if url else ''
+
+        card = f"""
+        <div style="padding:10px 0;border-bottom:1px solid #e8e2d8;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span style="font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;
+                         background:{color}18;color:{color};border:0.5px solid {color}33;">
+              {tag}
+            </span>
+            <span style="font-size:9px;color:#b5a99e;">{source} · {time}</span>
+          </div>
+          <div style="font-size:12px;font-weight:500;color:#3d3530;line-height:1.4;margin-bottom:4px;">
+            {title}
+          </div>
+          <div style="font-size:11px;color:#8c7f74;line-height:1.5;margin-bottom:6px;">
+            {summary}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            {link_html}
+          </div>
+        </div>
+        """
+        cards.append(card)
+
+    html = '<div style="padding:4px 12px;">' + ''.join(cards) + '</div>'
+    headlines = [item.get('title', '') for item in feed[:6] if item.get('title')]
+    return html, gr.update(choices=headlines, value=None, visible=True)
+
 
 
 # ---------------------------------------------------------------------------
@@ -308,6 +342,28 @@ body, .gradio-container {
 ::-webkit-scrollbar-thumb { background: #ddd5c8; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #b45309; }
 
+/* News dropdown */
+#news-dropdown { font-size: 11px !important; }
+#news-dropdown label { font-size: 11px !important; color: #7a6e65 !important; }
+#news-dropdown select {
+    font-size: 11px !important;
+    background: #f5f0e8 !important;
+    border-color: #ddd5c8 !important;
+    color: #3d3530 !important;
+}
+
+/* Ask button */
+#news-ask-btn {
+    background: #b45309 !important;
+    border-color: #b45309 !important;
+    color: white !important;
+    border-radius: 7px !important;
+    font-size: 11px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+}
+#news-ask-btn:hover { background: #92400e !important; }
+
 /* Hide Gradio processing status text */
 .eta-bar { display: none !important; }
 .progress-text { display: none !important; }
@@ -319,7 +375,7 @@ body, .gradio-container {
 # Layout
 # ---------------------------------------------------------------------------
 
-with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
+with gr.Blocks(title="ML Research Assistant") as demo:
 
     archive_state = gr.State([])
 
@@ -387,11 +443,43 @@ with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
 
                 with gr.Tab("📰 AI News"):
                     news_refresh = gr.Button("🔄 Refresh", size="sm")
-                    news_box = gr.Markdown(
-                        "*Click Refresh to load news.*",
+
+                    news_box = gr.HTML(
+                        value="<p style='color:#b5a99e;font-size:12px;padding:12px;'>Click Refresh to load the latest AI news.</p>",
                         elem_id="news-box",
                     )
-                    news_refresh.click(fetch_news, outputs=news_box)
+
+                    # Dropdown to pick a headline and ask the assistant
+                    news_dropdown = gr.Dropdown(
+                        choices=[],
+                        label="Ask assistant about:",
+                        interactive=True,
+                        visible=False,
+                        elem_id="news-dropdown",
+                    )
+                    news_ask_btn = gr.Button(
+                        "💬 Ask assistant",
+                        size="sm",
+                        visible=False,
+                        elem_id="news-ask-btn",
+                    )
+
+                    # Refresh: update HTML cards AND populate dropdown
+                    news_refresh.click(
+                        fetch_news,
+                        outputs=[news_box, news_dropdown],
+                    )
+                    # Show ask button when dropdown is visible after refresh
+                    news_refresh.click(
+                        lambda: gr.update(visible=True),
+                        outputs=news_ask_btn,
+                    )
+                    # Ask button: paste selected headline into chat input
+                    news_ask_btn.click(
+                        lambda h: f'Tell me more about this AI news: "{h}"' if h else "",
+                        inputs=news_dropdown,
+                        outputs=msg,
+                    )
 
         # ── MAIN CHAT ─────────────────────────────────────────────
         with gr.Column(scale=4, elem_id="main-col"):
@@ -406,8 +494,6 @@ with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
                 label="",
                 show_label=False,
                 height=600,
-                type="messages",
-                show_copy_button=False,
             )
 
             with gr.Row():
@@ -427,4 +513,4 @@ with gr.Blocks(title="ML Research Assistant", css=CSS) as demo:
     new_chat_btn.click(new_chat, [chatbot, archive_state], [chatbot, archive_state])
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch(share=True, css=CSS)
