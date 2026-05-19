@@ -474,12 +474,7 @@ with gr.Blocks(title="ML Research Assistant") as demo:
                         lambda: gr.update(visible=True),
                         outputs=news_ask_btn,
                     )
-                    # Ask button: paste selected headline into chat input
-                    news_ask_btn.click(
-                        lambda h: f'Tell me more about this AI news: "{h}"' if h else "",
-                        inputs=news_dropdown,
-                        outputs=msg,
-                    )
+                    # news_ask_btn wired below after msg is defined
 
         # ── MAIN CHAT ─────────────────────────────────────────────
         with gr.Column(scale=4, elem_id="main-col"):
@@ -511,6 +506,13 @@ with gr.Blocks(title="ML Research Assistant") as demo:
     msg.submit(chat, [msg, chatbot], [chatbot, msg])
     send.click(chat, [msg, chatbot], [chatbot, msg])
     new_chat_btn.click(new_chat, [chatbot, archive_state], [chatbot, archive_state])
+
+    # News ask button — wired here because msg is defined in main col
+    news_ask_btn.click(
+        lambda h: f'Tell me more about this AI news: "{h}"' if h else "",
+        inputs=news_dropdown,
+        outputs=msg,
+    )
 
 if __name__ == "__main__":
     demo.launch(share=True, css=CSS)
