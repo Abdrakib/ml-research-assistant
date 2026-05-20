@@ -296,13 +296,19 @@ def _fuzzy_contains(message: str, keywords: tuple, threshold: int = 80) -> bool:
 
 
 def _is_calc(message: str) -> bool:
-    """Calculator intent: math keywords, digit+operator patterns."""
+    """Calculator intent: math keywords or digit+operator+digit patterns.
+
+    Requires the operator to sit between two digits so that hyphens in
+    model names (gpt-4o, llama-3, phi-3) and version numbers (3.5) never
+    trigger the calculator by accident.
+    """
     if _contains_any(message, _CALC_WORD_KEYS):
         return True
-    if re.search(r"\d", message) and re.search(r"[+\-*/×÷]", message):
+    # Operator must be flanked by digits — excludes model-name hyphens
+    if re.search(r"\d\s*[+\-*/×÷]\s*\d", message):
         return True
     low = message.lower()
-    if "what is" in low and re.search(r"\d", message):
+    if "what is" in low and re.search(r"\d+\s*[+\-*/×÷]\s*\d", message):
         return True
     return False
 
