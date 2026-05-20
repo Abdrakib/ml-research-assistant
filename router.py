@@ -275,6 +275,31 @@ _BENCHMARK_KEYS = (
 )
 
 
+_LLM_LEADERBOARD_KEYS = (
+    # Direct comparison phrases
+    "compare llm", "llm comparison", "llm vs", "vs llm",
+    "compare gpt", "compare claude", "compare llama", "compare mistral",
+    "compare gemma", "compare qwen", "compare phi", "compare deepseek",
+    # X vs Y model name patterns
+    "gpt vs", "gpt-4 vs", "gpt-4o vs", "gpt4 vs",
+    "claude vs", "claude 3", "claude 3.5",
+    "llama vs", "llama 3", "llama 2",
+    "mistral vs", "mixtral vs", "gemma vs", "gemma 2",
+    "phi vs", "phi-3", "deepseek vs",
+    "vs gpt", "vs claude", "vs llama", "vs mistral",
+    "vs gemma", "vs phi", "vs deepseek", "vs mixtral",
+    # LLM leaderboard phrases
+    "llm leaderboard", "llm ranking", "llm benchmark",
+    "best llm", "top llm", "which llm", "llm score",
+    "open llm leaderboard",
+    # Standard LLM benchmark names
+    "mmlu", "gsm8k", "humaneval", "hellaswag",
+    # Performance questions about specific LLMs
+    "how does gpt", "how does claude", "how does llama",
+    "how does mistral", "how does gemma",
+)
+
+
 # ── Helper functions ──────────────────────────────────────────────────────────
 
 def _contains_any(haystack: str, needles: tuple) -> bool:
