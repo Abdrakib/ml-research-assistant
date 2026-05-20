@@ -333,6 +333,10 @@ def _detect_tool(message: str) -> str:
         return "calc"
 
     # ── ML Specialized tools (checked before general search) ───────────────
+    # llm_leaderboard BEFORE model_benchmarks — more specific keywords
+    if _contains_any(message, _LLM_LEADERBOARD_KEYS) or _fuzzy_contains(message, _LLM_LEADERBOARD_KEYS, threshold=90):
+        return "llm_leaderboard"
+
     if _contains_any(message, _BENCHMARK_KEYS) or _fuzzy_contains(message, _BENCHMARK_KEYS, threshold=85):
         return "model_benchmarks"
 
@@ -403,6 +407,7 @@ if __name__ == "__main__":
         "paper_summarizer": True,
         "github_trending": True,
         "model_benchmarks": True,
+        "llm_leaderboard": True,
     }
 
     _msgs = (
