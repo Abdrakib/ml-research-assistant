@@ -4,7 +4,7 @@ emoji: 🧠
 colorFrom: yellow
 colorTo: purple
 sdk: gradio
-sdk_version: "4.44.0"
+sdk_version: "5.0.0"
 app_file: app.py
 pinned: true
 license: mit
@@ -24,9 +24,9 @@ Instead of jumping between ArXiv, Papers With Code, HuggingFace, and Google, you
 
 | You ask | Tool fires |
 |---|---|
-| "find papers on RAG with code" | Papers w/ Code + ArXiv |
 | "compare GPT-4o vs Claude 3.5 on coding" | LLM Leaderboard |
 | "best model for question answering" | Model Benchmarks |
+| "find papers on RAG with code" | Papers w/ Code + ArXiv |
 | "what is the weather in Philadelphia" | Weather |
 | "latest AI news" | AI News Feed |
 | "write a PyTorch training loop" | Code Generator |
@@ -35,14 +35,14 @@ Instead of jumping between ArXiv, Papers With Code, HuggingFace, and Google, you
 
 ## Features
 
-- **17 specialized tools** auto-activated by a fuzzy keyword router — no manual switching needed
-- **LLM Leaderboard** — compare 20 major LLMs across MMLU, GSM8K, HumanEval, and HellaSwag with real scores from official release reports
-- **Model Benchmarks** — task-specific leaderboards (text classification, QA, image classification etc.) pulled from HuggingFace model cards with real F1/Accuracy scores
+- **17 specialized tools** auto-activated by a fuzzy keyword router
+- **LLM Leaderboard** — compare 20 major LLMs across MMLU, GSM8K, HumanEval, HellaSwag with real scores from official release reports
+- **Model Benchmarks** — task-specific leaderboards pulled from HuggingFace model cards with real F1/Accuracy scores
 - **Papers w/ Code** — ArXiv paper search + GitHub implementation links with star counts
-- **Live AI News Feed** — sidebar news tab that auto-refreshes every 30 minutes, click any headline to ask the assistant about it
+- **Live AI News Feed** — sidebar news tab that auto-refreshes, click any headline to ask the assistant about it
 - **Chat History** — previous conversations saved in the sidebar
 - **Tool toggles** — enable/disable any tool from the sidebar Tools tab
-- **Custom dark UI** — built with raw HTML/CSS/JS inside Gradio, not Gradio's default components
+- **Warm parchment UI** — clean, editorial dark-white theme built with Gradio + CSS
 
 ---
 
@@ -76,23 +76,16 @@ Instead of jumping between ArXiv, Papers With Code, HuggingFace, and Google, you
 ┌─────────────────────────────────────────────────────┐
 │                  HuggingFace Space                  │
 │                                                     │
-│  Custom HTML/CSS/JS UI                              │
-│  (sidebar + chat + news feed)                       │
+│  Gradio Native UI (gr.Blocks + CSS)                 │
+│  Sidebar: History / Tools / AI News tabs            │
 │          │                                          │
-│          │  fetch /run/predict                      │
+│          │  Gradio event handlers                   │
 │          ▼                                          │
-│  Gradio Backend (gr.Blocks)                         │
-│  ├── router.py  → keyword + fuzzy matching          │
-│  ├── 17 tool modules                                │
-│  └── Qwen2.5-7B-Instruct (ZeroGPU)                 │
+│  router.py  → keyword + fuzzy matching              │
+│  17 tool modules                                    │
+│  Qwen2.5-7B-Instruct (ZeroGPU)                     │
 └─────────────────────────────────────────────────────┘
 ```
-
-**Key design decisions:**
-- Gradio handles the backend and ZeroGPU queue — custom HTML/JS handles the entire UI
-- The JS communicates with Gradio via `/run/predict` (Gradio's official REST endpoint)
-- The router uses exact keyword matching + fuzzy matching (`thefuzz`) so typos still route correctly
-- LLM Leaderboard uses a curated static database of verified scores from official model release reports — faster and more accurate than scraping
 
 ---
 
@@ -101,15 +94,13 @@ Instead of jumping between ArXiv, Papers With Code, HuggingFace, and Google, you
 | Layer | Technology |
 |---|---|
 | Model | Qwen2.5-7B-Instruct |
-| Backend | Python, Gradio |
+| Backend | Python, Gradio 5+ |
 | GPU | HuggingFace ZeroGPU |
-| Frontend | HTML, CSS, JavaScript |
+| UI | Gradio native components + CSS |
 | News / Search | DuckDuckGo Search (ddgs) |
 | Paper Search | ArXiv API |
 | Code Links | GitHub Search API |
 | Fuzzy Routing | thefuzz |
-| Icons | Tabler Icons |
-| Font | Inter |
 
 ---
 
@@ -128,7 +119,7 @@ python app.py
 
 ```
 ml-research-assistant/
-├── app.py                  # Main Gradio app + custom UI
+├── app.py                  # Main Gradio app + UI
 ├── model.py                # Qwen2.5-7B inference + ZeroGPU
 ├── router.py               # Keyword + fuzzy tool router
 ├── prompt_builder.py       # Prompt construction
@@ -157,7 +148,7 @@ ml-research-assistant/
 
 ## Author
 
-**Rakib** — CS student at Community College of Philadelphia  
+**Rakib** — CS graduate, Community College of Philadelphia  
 GitHub: [Abdrakib](https://github.com/Abdrakib)  
 HuggingFace: [Abdourakib](https://huggingface.co/Abdourakib)  
 Portfolio: [abdourakib.com](https://abdourakib.com)
