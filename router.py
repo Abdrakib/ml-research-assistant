@@ -89,6 +89,9 @@ _GITHUB_KEYS = (
     "my repositories",
     "my profile",
     "my code",
+    "my github",
+    "github repos",
+    "github profile",
 )
 
 # ── New ML Specialized tool keywords ─────────────────────────────────────────
@@ -317,6 +320,11 @@ def _detect_tool(message: str) -> str:
 
     if _contains_any(message, _MEMORY_KEYS) or _fuzzy_contains(message, _MEMORY_KEYS, threshold=90):
         return "memory"
+
+    # github_trending BEFORE github — 'trending ml repos on github' has 'repos'
+    # which matches _GITHUB_KEYS if checked first
+    if _contains_any(message, _GITHUB_TRENDING_KEYS) or _fuzzy_contains(message, _GITHUB_TRENDING_KEYS, threshold=92):
+        return "github_trending"
 
     if _contains_any(message, _GITHUB_KEYS) or _fuzzy_contains(message, _GITHUB_KEYS, threshold=85):
         return "github"
