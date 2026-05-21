@@ -434,7 +434,6 @@ with gr.Blocks(title="ML Research Assistant") as demo:
                         cb = gr.Checkbox(
                             label=tool_label,
                             value=_tool_state.get(tool_id, True),
-                            container=False,
                         )
                         def _make_toggle(tid):
                             def _toggle(v): _tool_state[tid] = v
@@ -489,7 +488,6 @@ with gr.Blocks(title="ML Research Assistant") as demo:
                 label="",
                 show_label=False,
                 height=600,
-                type="messages",
             )
 
             with gr.Row():
@@ -497,7 +495,6 @@ with gr.Blocks(title="ML Research Assistant") as demo:
                     placeholder="Ask about papers, models, benchmarks…",
                     show_label=False,
                     scale=9,
-                    container=False,
                     lines=1,
                     max_lines=4,
                 )
