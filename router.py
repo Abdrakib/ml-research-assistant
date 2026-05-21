@@ -395,9 +395,6 @@ def _detect_tool(message: str) -> str:
     if _contains_any(message, _PYPI_KEYS) or _fuzzy_contains(message, _PYPI_KEYS, threshold=85):
         return "python_packages"
 
-    if _contains_any(message, _GITHUB_TRENDING_KEYS) or _fuzzy_contains(message, _GITHUB_TRENDING_KEYS, threshold=92):
-        return "github_trending"
-
     # ── General search and deep search (last resort) ────────────────────────
     if _contains_any(message, _DEEP_SEARCH_KEYS) or _fuzzy_contains(message, _DEEP_SEARCH_KEYS, threshold=85):
         return "deep_search"

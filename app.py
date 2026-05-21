@@ -489,6 +489,7 @@ with gr.Blocks(title="ML Research Assistant") as demo:
                 label="",
                 show_label=False,
                 height=600,
+                type="messages",
             )
 
             with gr.Row():
@@ -515,4 +516,4 @@ with gr.Blocks(title="ML Research Assistant") as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch(share=True, css=CSS)
+    demo.launch(css=CSS)

@@ -1,6 +1,5 @@
 # UI
-gradio>=6.0.0
-streamlit>=1.33.0
+gradio>=6.0.0,<7
 
 # ML / inference
 torch

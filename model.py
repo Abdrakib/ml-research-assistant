@@ -35,7 +35,6 @@ def _load_model() -> None:
         device_map="auto",
     )
     _MODEL.eval()
-    print(f"Model loaded: {_MODEL_ID}")
 
 
 def _generate(prompt: str) -> str:
